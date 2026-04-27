@@ -77,9 +77,9 @@ export default function BillEntry() {
     setItems(currentGroup.map(it => ({
       itemUid: it.itemUid,                      // ← key for update
       itemName: it.itemName,
-      amount: it.plannedAmount,
+      amount: '',
       gstType: 'CGST+SGST',
-      gstPercent: 18,
+      gstPercent: 0,
       cgstAmt: 0,
       sgstAmt: 0,
       igstAmt: 0,
@@ -118,107 +118,125 @@ export default function BillEntry() {
   const transportGSTAmt = transportWOGST * (transportGSTPercent / 100);
   const grandTotal = itemsTotal + transportWOGST + transportGSTAmt + adjustment;
 
-  // const handleSubmit = async () => {
-  //   if (!billNo.trim() || !billDate || !status) {
-  //     alert('Status, Bill No. और Bill Date अनिवार्य हैं');
-  //     return;
-  //   }
+ 
+//   const handleSubmit = async () => {
+//   if (!billNo.trim() || !billDate || !status) {
+//     alert('Status, Bill No. और Bill Date अनिवार्य हैं');
+//     return;
+//   }
 
-  //   try {
-  //     // Update EACH ITEM ROW separately (different uid = different sheet row)
-  //     const updatePromises = items.map(async (item) => {
-  //       const payload = {
-  //         uid: item.offBillUID,                      // ← send per-item uid (column C)
-  //         STATUS_4: status,
-  //         Vendor_Name_4: vendorName.trim(),
-  //         BILL_NO_4: billNo.trim(),
-  //         BILL_DATE_4: billDate,
-  //         BASIC_AMOUNT_4: Number(item.amount).toFixed(2),
-  //         CGST_4: item.cgstAmt.toFixed(2),
-  //         SGST_4: item.sgstAmt.toFixed(2),
-  //         IGST_4: item.igstAmt.toFixed(2),
-  //         TOTAL_AMOUNT_4: item.rowTotal.toFixed(2),
-  //         TRASNPORT_CHARGES_4: transportWOGST,
-  //         Transport_Gst_4: transportGSTAmt.toFixed(2),
-  //         NET_AMOUNT_4: grandTotal.toFixed(2),
-  //         Remark_4: remark.trim(),
-  //       };
+//   try {
+//     // सभी items से totals calculate कर लो (backend को detailed breakdown न देना हो तो)
+//     const totalBasic = items.reduce((sum, i) => sum + Number(i.amount || 0), 0);
+//     const totalCGST  = items.reduce((sum, i) => sum + (i.cgstAmt || 0), 0);
+//     const totalSGST  = items.reduce((sum, i) => sum + (i.sgstAmt || 0), 0);
+//     const totalIGST  = items.reduce((sum, i) => sum + (i.igstAmt || 0), 0);
+//     const totalRow   = items.reduce((sum, i) => sum + (i.rowTotal || 0), 0);
 
-  //       return updateEntry(payload).unwrap();
-  //     });
+//     const transportGSTAmt = transportWOGST * (transportGSTPercent / 100);
+//     const netAmount = totalRow + transportWOGST + transportGSTAmt + adjustment;
 
-  //     await Promise.all(updatePromises);
+//     const payload = {
+//       uid: selectedBillId,               // ← यही भेजना है (OFFBILLUID)
 
-  //     alert(`Bill  के ${items.length} आइटम सफलतापूर्वक अपडेट हो गए`);
-  //     setSelectedBillId('');
-  //     refetch();
-  //   } catch (err) {
-  //     console.error(err);
-  //     alert('Update failed: ' + (err?.data?.message || 'Unknown error'));
-  //   }
-  // };
+//       STATUS_4: status,
+//       Vendor_Name_4: vendorName.trim(),
+//       BILL_NO_4: billNo.trim(),
+//       BILL_DATE_4: billDate,
+
+//       // Aggregated / summarized values (अगर backend per-item नहीं चाहता)
+//       BASIC_AMOUNT_4: totalBasic.toFixed(2),
+//       CGST_4: totalCGST.toFixed(2),
+//       SGST_4: totalSGST.toFixed(2),
+//       IGST_4: totalIGST.toFixed(2),
+//       TOTAL_AMOUNT_4: totalRow.toFixed(2),
+
+//       TRASNPORT_CHARGES_4: transportWOGST.toFixed(2),
+//       Transport_Gst_4: transportGSTAmt.toFixed(2),
+//       NET_AMOUNT_4: netAmount.toFixed(2),
+
+//       Remark_4: remark.trim(),
+
+//       // अगर backend को items की list भी चाहिए (JSON string में) तो optional:
+//       // items_json: JSON.stringify(items.map(i => ({
+//       //   itemUid: i.itemUid,
+//       //   amount: i.amount,
+//       //   gstType: i.gstType,
+//       //   gstPercent: i.gstPercent,
+//       //   // etc.
+//       // }))),
+//     };
+
+//     // सिर्फ ONE API call
+//     await updateEntry(payload).unwrap();
+
+//     alert(`Bill ${selectedBillId} सफलतापूर्वक अपडेट हो गया (${items.length} items के साथ)`);
+    
+//     setSelectedBillId('');
+//     refetch();
+//   } catch (err) {
+//     console.error("Update error:", err);
+//     const msg = err?.data?.message || err?.message || "कुछ गलत हुआ";
+//     alert(`Update failed: ${msg}`);
+//   }
+// };
 
 
-
-  const handleSubmit = async () => {
+const handleSubmit = async () => {
   if (!billNo.trim() || !billDate || !status) {
     alert('Status, Bill No. और Bill Date अनिवार्य हैं');
     return;
   }
 
+  // Validate - har item ka amount filled hona chahiye
+  const emptyItems = items.filter(i => !i.amount || Number(i.amount) <= 0);
+  if (emptyItems.length > 0) {
+    alert(`${emptyItems.length} items का amount खाली है`);
+    return;
+  }
+
   try {
-    // सभी items से totals calculate कर लो (backend को detailed breakdown न देना हो तो)
-    const totalBasic = items.reduce((sum, i) => sum + Number(i.amount || 0), 0);
-    const totalCGST  = items.reduce((sum, i) => sum + (i.cgstAmt || 0), 0);
-    const totalSGST  = items.reduce((sum, i) => sum + (i.sgstAmt || 0), 0);
-    const totalIGST  = items.reduce((sum, i) => sum + (i.igstAmt || 0), 0);
-    const totalRow   = items.reduce((sum, i) => sum + (i.rowTotal || 0), 0);
-
     const transportGSTAmt = transportWOGST * (transportGSTPercent / 100);
-    const netAmount = totalRow + transportWOGST + transportGSTAmt + adjustment;
+    const netAmount = grandTotal;
 
-    const payload = {
-      uid: selectedBillId,               // ← यही भेजना है (OFFBILLUID)
+    // Har item ke liye alag API call - apni UID se
+    const updatePromises = items.map((item) => {
+      const payload = {
+        uid: item.itemUid,  // ← C column UID (per row unique)
 
-      STATUS_4: status,
-      Vendor_Name_4: vendorName.trim(),
-      BILL_NO_4: billNo.trim(),
-      BILL_DATE_4: billDate,
+        STATUS_4: status,
+        Vendor_Name_4: vendorName.trim(),
+        BILL_NO_4: billNo.trim(),
+        BILL_DATE_4: billDate,
 
-      // Aggregated / summarized values (अगर backend per-item नहीं चाहता)
-      BASIC_AMOUNT_4: totalBasic.toFixed(2),
-      CGST_4: totalCGST.toFixed(2),
-      SGST_4: totalSGST.toFixed(2),
-      IGST_4: totalIGST.toFixed(2),
-      TOTAL_AMOUNT_4: totalRow.toFixed(2),
+        BASIC_AMOUNT_4: Number(item.amount).toFixed(2),
+        CGST_4: item.cgstAmt.toFixed(2),
+        SGST_4: item.sgstAmt.toFixed(2),
+        IGST_4: item.igstAmt.toFixed(2),
+        TOTAL_AMOUNT_4: item.rowTotal.toFixed(2),
 
-      TRASNPORT_CHARGES_4: transportWOGST.toFixed(2),
-      Transport_Gst_4: transportGSTAmt.toFixed(2),
-      NET_AMOUNT_4: netAmount.toFixed(2),
+        TRASNPORT_CHARGES_4: transportWOGST.toFixed(2),
+        Transport_Gst_4: transportGSTAmt.toFixed(2),
+        NET_AMOUNT_4: netAmount.toFixed(2),
 
-      Remark_4: remark.trim(),
+        Remark_4: remark.trim(),
+      };
 
-      // अगर backend को items की list भी चाहिए (JSON string में) तो optional:
-      // items_json: JSON.stringify(items.map(i => ({
-      //   itemUid: i.itemUid,
-      //   amount: i.amount,
-      //   gstType: i.gstType,
-      //   gstPercent: i.gstPercent,
-      //   // etc.
-      // }))),
-    };
+      console.log(`Updating UID: ${item.itemUid}`, payload);
+      return updateEntry(payload).unwrap();
+    });
 
-    // सिर्फ ONE API call
-    await updateEntry(payload).unwrap();
+    const results = await Promise.all(updatePromises);
+    console.log('All updates done:', results);
 
-    alert(`Bill ${selectedBillId} सफलतापूर्वक अपडेट हो गया (${items.length} items के साथ)`);
-    
+    alert(`✅ Bill ${selectedBillId} के ${items.length} items सफलतापूर्वक update हो गए`);
     setSelectedBillId('');
     refetch();
+
   } catch (err) {
-    console.error("Update error:", err);
-    const msg = err?.data?.message || err?.message || "कुछ गलत हुआ";
-    alert(`Update failed: ${msg}`);
+    console.error('Update error:', err);
+    const msg = err?.data?.message || err?.message || 'कुछ गलत हुआ';
+    alert(`❌ Update failed: ${msg}`);
   }
 };
 

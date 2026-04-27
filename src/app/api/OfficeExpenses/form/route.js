@@ -1,11 +1,8 @@
 
 
-// //////
-
-
-// import { NextResponse } from 'next/server';
-// import { sheets, spreadsheetId, drive } from '../../config/googleSheet';
-// const { Readable } = require('stream');
+import { NextResponse } from 'next/server';
+import { sheets, spreadsheetId, drive } from '../../config/googleSheet';
+const { Readable } = require('stream');
 
 // export async function GET(request) {
 //   try {
@@ -141,233 +138,6 @@
 // }
 
 
-// // Helper: Upload photo to Google Drive
-// async function uploadToGoogleDrive(base64Data, fileName) {
-//   if (!base64Data || typeof base64Data !== 'string' || !base64Data.startsWith('data:')) return '';
-
-//   const match = base64Data.match(/^data:([a-zA-Z0-9\/\-\+\.]+);base64,(.+)$/);
-//   if (!match) return '';
-
-//   const mimeType = match[1] || 'image/jpeg';
-//   const buffer = Buffer.from(match[2], 'base64');
-
-//   try {
-//     const fileStream = new Readable();
-//     fileStream.push(buffer);
-//     fileStream.push(null);
-
-//     const res = await drive.files.create({
-//       resource: {
-//         name: fileName,
-//         parents: [process.env.GOOGLE_DRIVE_FOLDER_ID || 'root'],
-//       },
-//       media: { mimeType, body: fileStream },
-//       fields: 'id',
-//       supportsAllDrives: true,
-//     });
-
-//     const fileId = res.data.id;
-//     await drive.permissions.create({
-//       fileId,
-//       requestBody: { role: 'reader', type: 'anyone' },
-//       supportsAllDrives: true,
-//     });
-
-//     return `https://drive.google.com/uc?export=view&id=${fileId}`;
-//   } catch (error) {
-//     console.error(`Drive upload failed for ${fileName}:`, error.message);
-//     return '';
-//   }
-// }
-
-// // Helper: Get IST Timestamp
-// function getISTTimestamp() {
-//   const now = new Date();
-//   const istOffset = 5.5 * 60 * 60 * 1000;
-//   const istDate = new Date(now.getTime() + istOffset);
-//   const dd = String(istDate.getUTCDate()).padStart(2, '0');
-//   const mm = String(istDate.getUTCMonth() + 1).padStart(2, '0');
-//   const yyyy = istDate.getUTCFullYear();
-//   const hh = String(istDate.getUTCHours()).padStart(2, '0');
-//   const min = String(istDate.getUTCMinutes()).padStart(2, '0');
-//   const ss = String(istDate.getUTCSeconds()).padStart(2, '0');
-//   return `${dd}/${mm}/${yyyy} ${hh}:${min}:${ss}`;
-// }
-
-// // Helper: Generate Bill Number — column B mein max Dim number + 1
-// async function generateBillNumber() {
-//   try {
-//     const response = await sheets.spreadsheets.values.get({
-//       spreadsheetId,
-//       range: 'Dimension_Office_Payment!B:B',
-//     });
-
-//     const rows = response.data.values || [];
-//     let maxNumber = 0;
-
-//     for (let i = 7; i < rows.length; i++) {
-//       const billNo = rows[i]?.[0];
-//       if (billNo && billNo.startsWith('Dim')) {
-//         const num = parseInt(billNo.replace('Dim', ''));
-//         if (!isNaN(num) && num > maxNumber) maxNumber = num;
-//       }
-//     }
-//     return `Dim${(maxNumber + 1).toString().padStart(4, '0')}`;
-//   } catch (error) {
-//     console.error('Error generating bill number:', error);
-//     return 'Dim0001';
-//   }
-// }
-
-// // Helper: Column C mein abhi tak ka sabse bada UID
-// async function getLastUID() {
-//   try {
-//     const response = await sheets.spreadsheets.values.get({
-//       spreadsheetId,
-//       range: 'Dimension_Office_Payment!C:C',
-//     });
-
-//     const rows = response.data.values || [];
-//     let maxUID = 0;
-
-//     for (let i = 7; i < rows.length; i++) {
-//       const uid = parseInt(rows[i]?.[0]);
-//       if (!isNaN(uid) && uid > maxUID) maxUID = uid;
-//     }
-//     return maxUID;
-//   } catch (error) {
-//     console.error('Error getting last UID:', error);
-//     return 0;
-//   }
-// }
-
-// // Helper: Sheet mein data ki last row number nikalo (row 8 se start)
-// async function getLastDataRow() {
-//   try {
-//     const response = await sheets.spreadsheets.values.get({
-//       spreadsheetId,
-//       range: 'Dimension_Office_Payment!A:A',
-//     });
-
-//     const rows = response.data.values || [];
-//     let lastRow = 7; // minimum row 8 (0-indexed: 7)
-
-//     for (let i = 7; i < rows.length; i++) {
-//       if (rows[i] && rows[i][0] && rows[i][0].trim() !== '') {
-//         lastRow = i;
-//       }
-//     }
-
-//     return lastRow + 1; // 0-indexed to 1-indexed, +1 = next empty row
-//   } catch (error) {
-//     console.error('Error getting last data row:', error);
-//     return 8; // fallback: row 8
-//   }
-// }
-
-// // Main POST Handler
-// export async function POST(request) {
-//   try {
-//     const body = await request.json();
-//     const { officeName, payeeName, expensesHead, items, remarks } = body;
-
-//     if (!officeName || !payeeName || !expensesHead || !items || items.length === 0) {
-//       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-//     }
-
-//     const timestamp = getISTTimestamp();
-
-//     // ✅ BillNumber — poori submission mein EK hi — Dim0001
-//     const billNumber = await generateBillNumber();
-
-//     // ✅ lastUID — sheet ka abhi tak ka max UID
-//     // 3 items bheje, lastUID=10 → items ko milega: 11, 12, 13
-//     const lastUID = await getLastUID();
-
-//     // ✅ nextRow — data ki last row ke baad se likhna shuru karo
-//     // Har item ALAG row mein jayega: nextRow, nextRow+1, nextRow+2 ...
-//     const nextRow = await getLastDataRow();
-
-//     console.log(`billNumber: ${billNumber}, lastUID: ${lastUID}, nextRow: ${nextRow}`);
-
-//     const batchData = [];
-//     const uploadedPhotos = [];
-
-//     for (let i = 0; i < items.length; i++) {
-//       const item = items[i];
-
-//       // Har item ki alag row
-//       const rowNum = nextRow + i;         // Row 15, 16, 17 ...
-
-//       // Har item ka alag UID, sequentially badhta hua
-//       const uid = lastUID + (i + 1);      // UID 11, 12, 13 ...
-
-//       let billPhotoUrl = '';
-//       if (item.billPhoto && item.billPhoto.startsWith('data:')) {
-//         const uniqueId = `${billNumber}_uid${uid}_${Date.now()}`;
-//         billPhotoUrl = await uploadToGoogleDrive(item.billPhoto, `bill_${uniqueId}.jpg`);
-//         uploadedPhotos.push(billPhotoUrl);
-//       }
-
-//       const rowData = new Array(17).fill('');
-
-//       rowData[0] = timestamp;           // A: Timestamp
-//       rowData[1] = billNumber;          // B: Office_Bill_No  ✅ SAME (Dim0001, Dim0001, Dim0001)
-//       rowData[2] = uid;                 // C: UID             ✅ ALAG (11, 12, 13)
-//       rowData[3] = officeName;          // D: OFFICE_NAME
-//       rowData[4] = payeeName;           // E: PAYEE_NAME
-//       rowData[6] = item.subhead;        // G: EXPENSES_SUBHEAD
-//       rowData[7] = item.itemName;       // H: ITEM_NAME
-//       rowData[8] = item.unit;           // I: UNIT
-//       rowData[9] = item.skuCode;        // J: SKU_CODE
-//       rowData[10] = item.quantity;      // K: QTY
-//       rowData[11] = item.amount;        // L: AMOUNT
-//       rowData[14] = item.formRaisedBy;  // O: RAISED_BY
-//       rowData[15] = billPhotoUrl;       // P: Bill_Photo
-//       rowData[16] = remarks || '';      // Q: Remarks
-
-//       batchData.push({
-//         range: `Dimension_Office_Payment!A${rowNum}:Q${rowNum}`,
-//         values: [rowData]
-//       });
-//     }
-
-//     // Saare items ek saath sheet mein likhte hain
-//     await sheets.spreadsheets.values.batchUpdate({
-//       spreadsheetId,
-//       requestBody: {
-//         valueInputOption: 'USER_ENTERED',
-//         data: batchData
-//       }
-//     });
-
-//     return NextResponse.json({
-//       success: true,
-//       message: `${items.length} item(s) submitted successfully`,
-//       data: {
-//         billNumber,
-//         timestamp,
-//         totalItems: items.length,
-//         totalAmount: items.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0),
-//         billPhotos: uploadedPhotos
-//       }
-//     }, { status: 201 });
-
-//   } catch (error) {
-//     console.error('Error:', error);
-//     return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 });
-//   }
-// }
-
-
-
-
-
-
-import { NextResponse } from 'next/server';
-import { sheets, spreadsheetId, drive } from '../../config/googleSheet';
-const { Readable } = require('stream');
-
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -375,10 +145,62 @@ export async function GET(request) {
     const subhead = searchParams.get('subhead');
     const itemName = searchParams.get('itemName');
     const getFormRaised = searchParams.get('getFormRaised');
+    const getProjects = searchParams.get('getProjects'); // ✅ New param
 
+    // ✅ Project_Name data ke liye alag range (L column = index 8 from D)
+    // D=0, E=1, F=2, G=3, H=4, I=5, J=6, K=7, L=8
+    if (getProjects === 'true') {
+      const projectResponse = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: 'Project_Data!D4:L', // ✅ D se L tak extend kiya
+      });
+
+      const projectRows = projectResponse.data.values;
+
+      if (!projectRows || projectRows.length === 0) {
+        return NextResponse.json({ error: 'No project data found' }, { status: 404 });
+      }
+
+      // ✅ Header row dhundo
+      let projectHeaderIndex = 0;
+      let projectHeaders = [];
+
+      for (let i = 0; i < projectRows.length; i++) {
+        const row = projectRows[i];
+        if (row && row.length > 0 && (row[0] === 'Dimension_Subhead_Name' || row[1] === 'ITEM_NAME')) {
+          projectHeaderIndex = i;
+          projectHeaders = row;
+          break;
+        }
+      }
+
+      const projectDataRows = projectRows.slice(projectHeaderIndex + 1).filter(
+        row => row && row.length > 0 && row[0]
+      );
+
+      // ✅ L column = index 8 (D se count karo: D=0,E=1,F=2,G=3,H=4,I=5,J=6,K=7,L=8)
+      const projectNameIndex = 8;
+
+      const uniqueProjects = [
+        ...new Set(
+          projectDataRows
+            .map(row => row[projectNameIndex])
+            .filter(Boolean)
+        )
+      ];
+
+      console.log('Total unique projects found:', uniqueProjects.length);
+
+      return NextResponse.json({ 
+        type: 'projects', 
+        data: uniqueProjects 
+      });
+    }
+
+    // ✅ Existing code - range extend kiya D4:L tak
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: 'Project_Data!D4:J',
+      range: 'Project_Data!D4:L', // ✅ J se L kar diya
     });
 
     const rows = response.data.values;
@@ -401,16 +223,19 @@ export async function GET(request) {
 
     if (headers.length === 0) {
       headerRowIndex = 0;
-      headers = ['Dimension_Subhead_Name', 'ITEM_NAME', 'Unit', 'SKU CODE', '', '', 'Form_Raised_Form'];
+      headers = ['Dimension_Subhead_Name', 'ITEM_NAME', 'Unit', 'SKU CODE', '', '', 'Form_Raised_Form', '', 'Project_Name'];
     }
 
-    const dataRows = rows.slice(headerRowIndex + 1).filter(row => row && row.length > 0 && row[0]);
+    const dataRows = rows.slice(headerRowIndex + 1).filter(
+      row => row && row.length > 0 && row[0]
+    );
 
     const subheadIndex = 0;
     const itemNameIndex = 1;
     const unitIndex = 2;
     const skuCodeIndex = 3;
     const formRaisedIndex = 6;
+    const projectNameIndex = 8; // ✅ L column
 
     if (getFormRaised === 'true' && subhead) {
       const uniqueFormRaised = [...new Set(
@@ -430,19 +255,26 @@ export async function GET(request) {
         if (!subhead) return;
 
         if (!subheadMap.has(subhead)) {
-          subheadMap.set(subhead, { subhead, items: [], formRaised: new Set() });
+          subheadMap.set(subhead, { 
+            subhead, 
+            items: [], 
+            formRaised: new Set() 
+          });
         }
 
         const subheadData = subheadMap.get(subhead);
         const itemName = row[itemNameIndex];
+
         if (itemName) {
           subheadData.items.push({
             itemName,
             unit: row[unitIndex] || '',
             skuCode: row[skuCodeIndex] || '',
-            formRaised: row[formRaisedIndex] || ''
+            formRaised: row[formRaisedIndex] || '',
+            projectName: row[projectNameIndex] || '' // ✅ Add kiya
           });
         }
+
         if (row[formRaisedIndex]) {
           subheadData.formRaised.add(row[formRaisedIndex]);
         }
@@ -459,7 +291,9 @@ export async function GET(request) {
     }
 
     if (!subhead && !itemName) {
-      const uniqueSubheads = [...new Set(dataRows.map(row => row[subheadIndex]))].filter(Boolean);
+      const uniqueSubheads = [
+        ...new Set(dataRows.map(row => row[subheadIndex]))
+      ].filter(Boolean);
       return NextResponse.json({ type: 'subheads', data: uniqueSubheads });
     }
 
@@ -470,7 +304,8 @@ export async function GET(request) {
           itemName: row[itemNameIndex],
           unit: row[unitIndex] || '',
           skuCode: row[skuCodeIndex] || '',
-          formRaised: row[formRaisedIndex] || ''
+          formRaised: row[formRaisedIndex] || '',
+          projectName: row[projectNameIndex] || '' // ✅ Add kiya
         }))
         .filter(item => item.itemName);
       return NextResponse.json({ type: 'items', data: filteredItems });
@@ -488,7 +323,8 @@ export async function GET(request) {
         data: {
           unit: selectedItem[unitIndex] || '',
           skuCode: selectedItem[skuCodeIndex] || '',
-          formRaised: selectedItem[formRaisedIndex] || ''
+          formRaised: selectedItem[formRaisedIndex] || '',
+          projectName: selectedItem[projectNameIndex] || '' // ✅ Add kiya
         }
       });
     }
@@ -497,9 +333,16 @@ export async function GET(request) {
 
   } catch (error) {
     console.error('Error:', error);
-    return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error', details: error.message }, 
+      { status: 500 }
+    );
   }
 }
+
+
+
+
 
 
 // Helper: Upload photo to Google Drive

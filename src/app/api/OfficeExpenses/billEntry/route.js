@@ -75,11 +75,156 @@ export async function GET(request) {
 
 
 // POST: /api/dim-expenses-entry
+// export async function POST(request) {
+//   try {
+//     const body = await request.json();
+//     const {
+//       uid,
+//       STATUS_4,
+//       Vendor_Name_4,
+//       BILL_NO_4,
+//       BILL_DATE_4,
+//       BASIC_AMOUNT_4,
+//       CGST_4,
+//       SGST_4,
+//       IGST_4,
+//       TOTAL_AMOUNT_4,
+//       TRASNPORT_CHARGES_4,
+//       Transport_Gst_4,
+//       NET_AMOUNT_4,
+//       Remark_4,
+//     } = body;
+
+//     console.log('Received body:', body);
+
+//     if (!uid) {
+//       return NextResponse.json(
+//         { success: false, message: 'uid (Bill No) is required' },
+//         { status: 400 }
+//       );
+//     }
+
+//     const trimmedBillNo = String(uid).trim();
+
+//     const response = await sheets.spreadsheets.values.get({
+//       spreadsheetId: spreadsheetId,
+//       range: 'Dimension_Office_Payment!B7:B',
+//     });
+
+//     const rows = response.data.values || [];
+
+//     if (rows.length === 0) {
+//       return NextResponse.json({ success: false, message: 'No data in sheet' }, { status: 404 });
+//     }
+
+//     // Sab matching rows collect karo
+//     const matchingRows = [];
+//     rows.forEach((row, index) => {
+//       if (row && row[0]) {
+//         const cellValue = String(row[0]).trim();
+//         if (cellValue === trimmedBillNo) {
+//           matchingRows.push({
+//             rowIndex: index,
+//             rowNumber: 7 + index,
+//           });
+//         }
+//       }
+//     });
+
+//     if (matchingRows.length === 0) {
+//       return NextResponse.json(
+//         { success: false, message: 'No matching Bill No found', searchedFor: trimmedBillNo },
+//         { status: 404 }
+//       );
+//     }
+
+//     // Last row
+//     const lastRow = matchingRows[matchingRows.length - 1];
+//     const lastRowNumber = lastRow.rowNumber;
+
+//     console.log(`Found ${matchingRows.length} matches → last row: ${lastRowNumber}`);
+
+//     const requests = [];
+
+//     // ───────────────────────────────────────────────
+//     // 1. SABHI matching rows mein STATUS_4 update kar do
+//     // ───────────────────────────────────────────────
+//     if (STATUS_4 !== undefined && STATUS_4 !== null && STATUS_4 !== '') {
+//       matchingRows.forEach(({ rowNumber }) => {
+//         requests.push({
+//           range: `Dimension_Office_Payment!AK${rowNumber}`,
+//           values: [[STATUS_4]],
+//         });
+//       });
+//     }
+
+//     // ───────────────────────────────────────────────
+//     // 2. Sirf LAST row mein baaki fields update kar do
+//     // ───────────────────────────────────────────────
+//     const addLastOnly = (colLetter, value) => {
+//       if (value !== undefined && value !== null && value !== '') {
+//         requests.push({
+//           range: `Dimension_Office_Payment!${colLetter}${lastRowNumber}`,
+//           values: [[value]],
+//         });
+//       }
+//     };
+
+//     addLastOnly('AM', Vendor_Name_4);
+//     addLastOnly('AN', BILL_NO_4);
+//     addLastOnly('AO', BILL_DATE_4);
+//     addLastOnly('AP', BASIC_AMOUNT_4);
+//     addLastOnly('AQ', CGST_4);
+//     addLastOnly('AR', SGST_4);
+//     addLastOnly('AS', IGST_4);
+//     addLastOnly('AT', TOTAL_AMOUNT_4);
+//     addLastOnly('AU', TRASNPORT_CHARGES_4);
+//     addLastOnly('AV', Transport_Gst_4);
+//     addLastOnly('AW', NET_AMOUNT_4);
+//     addLastOnly('AX', Remark_4);
+
+//     if (requests.length === 0) {
+//       return NextResponse.json(
+//         { success: false, message: 'No fields to update' },
+//         { status: 400 }
+//       );
+//     }
+
+//     await sheets.spreadsheets.values.batchUpdate({
+//       spreadsheetId: spreadsheetId,
+//       resource: {
+//         valueInputOption: 'USER_ENTERED',
+//         data: requests,
+//       },
+//     });
+
+//     return NextResponse.json({
+//       success: true,
+//       message: 'Data updated: STATUS_4 sabhi rows mein, baaki sirf last row mein',
+//       updatedRows: matchingRows.length,
+//       lastRow: lastRowNumber,
+//       statusValueUsed: STATUS_4 || '(not provided)',
+//     });
+
+//   } catch (error) {
+//     console.error('Error:', error);
+//     return NextResponse.json(
+//       { success: false, message: 'Server error', error: error.message },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+
+
+
+
 export async function POST(request) {
   try {
     const body = await request.json();
+
     const {
-      uid,
+      uid,           // ← C column UID (unique per row)
       STATUS_4,
       Vendor_Name_4,
       BILL_NO_4,
@@ -95,103 +240,104 @@ export async function POST(request) {
       Remark_4,
     } = body;
 
-    console.log('Received body:', body);
+    console.log('Received UID:', uid);
 
     if (!uid) {
       return NextResponse.json(
-        { success: false, message: 'uid (Bill No) is required' },
+        { success: false, message: 'uid (Column C) is required' },
         { status: 400 }
       );
     }
 
-    const trimmedBillNo = String(uid).trim();
+    const trimmedUid = String(uid).trim();
 
+    // ─── A column se poora data lo (A8:C tak) ───────────────
     const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: spreadsheetId,
-      range: 'Dimension_Office_Payment!B7:B',
+      spreadsheetId,
+      range: 'Dimension_Office_Payment!A8:C',  // A, B, C sab lo
     });
 
     const rows = response.data.values || [];
 
+    console.log(`Total rows fetched: ${rows.length}`);
+    console.log('Sample rows (first 3):',
+      rows.slice(0, 3).map((r, i) => ({
+        rowNum: 8 + i,
+        A: r[0],
+        B: r[1],
+        C: r[2],
+      }))
+    );
+
     if (rows.length === 0) {
-      return NextResponse.json({ success: false, message: 'No data in sheet' }, { status: 404 });
-    }
-
-    // Sab matching rows collect karo
-    const matchingRows = [];
-    rows.forEach((row, index) => {
-      if (row && row[0]) {
-        const cellValue = String(row[0]).trim();
-        if (cellValue === trimmedBillNo) {
-          matchingRows.push({
-            rowIndex: index,
-            rowNumber: 7 + index,
-          });
-        }
-      }
-    });
-
-    if (matchingRows.length === 0) {
       return NextResponse.json(
-        { success: false, message: 'No matching Bill No found', searchedFor: trimmedBillNo },
+        { success: false, message: 'Sheet empty hai' },
         { status: 404 }
       );
     }
 
-    // Last row
-    const lastRow = matchingRows[matchingRows.length - 1];
-    const lastRowNumber = lastRow.rowNumber;
+    // C column = index 2 (kyunki range A8:C se start kiya)
+    let targetRowNumber = null;
 
-    console.log(`Found ${matchingRows.length} matches → last row: ${lastRowNumber}`);
+    rows.forEach((row, index) => {
+      const cValue = String(row?.[2] || '').trim();
+      if (cValue === trimmedUid) {
+        targetRowNumber = 8 + index;
+        console.log(`✅ UID matched at row ${targetRowNumber}`);
+      }
+    });
 
-    const requests = [];
+    if (!targetRowNumber) {
+      // Debug ke liye - sabhi C values print karo
+      console.log('All C column values:',
+        rows.map((r, i) => `Row ${8 + i}: "${r?.[2] || ''}"`)
+      );
 
-    // ───────────────────────────────────────────────
-    // 1. SABHI matching rows mein STATUS_4 update kar do
-    // ───────────────────────────────────────────────
-    if (STATUS_4 !== undefined && STATUS_4 !== null && STATUS_4 !== '') {
-      matchingRows.forEach(({ rowNumber }) => {
-        requests.push({
-          range: `Dimension_Office_Payment!AK${rowNumber}`,
-          values: [[STATUS_4]],
-        });
-      });
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'No matching UID found in Column C',
+          searchedFor: trimmedUid,
+        },
+        { status: 404 }
+      );
     }
 
-    // ───────────────────────────────────────────────
-    // 2. Sirf LAST row mein baaki fields update kar do
-    // ───────────────────────────────────────────────
-    const addLastOnly = (colLetter, value) => {
-      if (value !== undefined && value !== null && value !== '') {
+    // ─── Update requests ─────────────────────────────────────
+    const requests = [];
+
+    const addField = (colLetter, value) => {
+      if (value !== undefined && value !== null && String(value).trim() !== '') {
         requests.push({
-          range: `Dimension_Office_Payment!${colLetter}${lastRowNumber}`,
+          range: `Dimension_Office_Payment!${colLetter}${targetRowNumber}`,
           values: [[value]],
         });
       }
     };
 
-    addLastOnly('AM', Vendor_Name_4);
-    addLastOnly('AN', BILL_NO_4);
-    addLastOnly('AO', BILL_DATE_4);
-    addLastOnly('AP', BASIC_AMOUNT_4);
-    addLastOnly('AQ', CGST_4);
-    addLastOnly('AR', SGST_4);
-    addLastOnly('AS', IGST_4);
-    addLastOnly('AT', TOTAL_AMOUNT_4);
-    addLastOnly('AU', TRASNPORT_CHARGES_4);
-    addLastOnly('AV', Transport_Gst_4);
-    addLastOnly('AW', NET_AMOUNT_4);
-    addLastOnly('AX', Remark_4);
+    addField('AK', STATUS_4);
+    addField('AM', Vendor_Name_4);
+    addField('AN', BILL_NO_4);
+    addField('AO', BILL_DATE_4);
+    addField('AP', BASIC_AMOUNT_4);
+    addField('AQ', CGST_4);
+    addField('AR', SGST_4);
+    addField('AS', IGST_4);
+    addField('AT', TOTAL_AMOUNT_4);
+    addField('AU', TRASNPORT_CHARGES_4);
+    addField('AV', Transport_Gst_4);
+    addField('AW', NET_AMOUNT_4);
+    addField('AX', Remark_4);
 
     if (requests.length === 0) {
       return NextResponse.json(
-        { success: false, message: 'No fields to update' },
+        { success: false, message: 'Koi field update karne ke liye nahi mila' },
         { status: 400 }
       );
     }
 
     await sheets.spreadsheets.values.batchUpdate({
-      spreadsheetId: spreadsheetId,
+      spreadsheetId,
       resource: {
         valueInputOption: 'USER_ENTERED',
         data: requests,
@@ -200,14 +346,13 @@ export async function POST(request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Data updated: STATUS_4 sabhi rows mein, baaki sirf last row mein',
-      updatedRows: matchingRows.length,
-      lastRow: lastRowNumber,
-      statusValueUsed: STATUS_4 || '(not provided)',
+      message: `Row ${targetRowNumber} successfully updated`,
+      updatedRow: targetRowNumber,
+      matchedUid: trimmedUid,
     });
 
   } catch (error) {
-    console.error('Error:', error);
+    console.error('POST Error:', error);
     return NextResponse.json(
       { success: false, message: 'Server error', error: error.message },
       { status: 500 }

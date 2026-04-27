@@ -1,7 +1,70 @@
-// app/redux/api/expensesForm.js
+
+// import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+
+// const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+
+// export const expensesForm = createApi({
+//   reducerPath: "expensesForm",
+//   baseQuery: fetchBaseQuery({
+//     baseUrl,
+//   }),
+//   tagTypes: ["FormData", "PaymentSubmission"],
+//   endpoints: (builder) => ({
+//     // Get all data at once
+//     getAllFormData: builder.query({
+//       query: () => "api/OfficeExpenses/form?action=all-data",
+//       transformResponse: (response) => {
+//         if (response?.type === 'all-data') {
+//           const subheadsList = [];
+//           const itemsMap = {};
+//           const formRaisedMap = {};
+          
+//           response.data.forEach(subheadData => {
+//             subheadsList.push(subheadData.subhead);
+//             itemsMap[subheadData.subhead] = subheadData.items;
+//             formRaisedMap[subheadData.subhead] = subheadData.formRaised;
+//           });
+          
+//           return {
+//             subheads: subheadsList,
+//             items: itemsMap,
+//             formRaised: formRaisedMap,
+//             rawData: response.data
+//           };
+//         }
+//         return {
+//           subheads: [],
+//           items: {},
+//           formRaised: {},
+//           rawData: []
+//         };
+//       },
+//       providesTags: ["FormData"],
+//     }),
+
+//     // Submit payment
+//     submitPayment: builder.mutation({
+//       query: (paymentData) => ({
+//         url: "api/OfficeExpenses/form",
+//         method: "POST",
+//         body: paymentData,
+//       }),
+//       invalidatesTags: ["PaymentSubmission"],
+//     }),
+//   }),
+// });
+
+// export const {
+//   useGetAllFormDataQuery,
+//   useSubmitPaymentMutation,
+// } = expensesForm;
+
+
+
+
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000";
 
 export const expensesForm = createApi({
   reducerPath: "expensesForm",
@@ -10,34 +73,47 @@ export const expensesForm = createApi({
   }),
   tagTypes: ["FormData", "PaymentSubmission"],
   endpoints: (builder) => ({
-    // Get all data at once
+    // Get all form data
     getAllFormData: builder.query({
-      query: () => "api/OfficeExpenses/form?action=all-data",
+      query: () => "/api/OfficeExpenses/form?action=all-data",
       transformResponse: (response) => {
-        if (response?.type === 'all-data') {
+        if (response?.type === "all-data") {
           const subheadsList = [];
           const itemsMap = {};
           const formRaisedMap = {};
-          
-          response.data.forEach(subheadData => {
+
+          response.data.forEach((subheadData) => {
             subheadsList.push(subheadData.subhead);
             itemsMap[subheadData.subhead] = subheadData.items;
             formRaisedMap[subheadData.subhead] = subheadData.formRaised;
           });
-          
+
           return {
             subheads: subheadsList,
             items: itemsMap,
             formRaised: formRaisedMap,
-            rawData: response.data
+            rawData: response.data,
           };
         }
+
         return {
           subheads: [],
           items: {},
           formRaised: {},
-          rawData: []
+          rawData: [],
         };
+      },
+      providesTags: ["FormData"],
+    }),
+
+    // ✅ NEW: Get project names for Office Name dropdown
+    getProjectNames: builder.query({
+      query: () => "/api/OfficeExpenses/form?getProjects=true",
+      transformResponse: (response) => {
+        if (response?.type === "projects" && Array.isArray(response.data)) {
+          return response.data;
+        }
+        return [];
       },
       providesTags: ["FormData"],
     }),
@@ -45,7 +121,7 @@ export const expensesForm = createApi({
     // Submit payment
     submitPayment: builder.mutation({
       query: (paymentData) => ({
-        url: "api/OfficeExpenses/form",
+        url: "/api/OfficeExpenses/form",
         method: "POST",
         body: paymentData,
       }),
@@ -56,5 +132,6 @@ export const expensesForm = createApi({
 
 export const {
   useGetAllFormDataQuery,
+  useGetProjectNamesQuery, // ✅ NEW hook
   useSubmitPaymentMutation,
 } = expensesForm;
