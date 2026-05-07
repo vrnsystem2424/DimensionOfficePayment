@@ -1,143 +1,9 @@
 
-
 import { NextResponse } from 'next/server';
-import { sheets, spreadsheetId, drive } from '../../config/googleSheet';
+import { sheets, spreadsheetId, drive } from '@/app/api/config/googleSheet';
 const { Readable } = require('stream');
 
-// export async function GET(request) {
-//   try {
-//     const { searchParams } = new URL(request.url);
-//     const action = searchParams.get('action');
-//     const subhead = searchParams.get('subhead');
-//     const itemName = searchParams.get('itemName');
-//     const getFormRaised = searchParams.get('getFormRaised');
-
-//     const response = await sheets.spreadsheets.values.get({
-//       spreadsheetId,
-//       range: 'Project_Data!D4:J',
-//     });
-
-//     const rows = response.data.values;
-
-//     if (!rows || rows.length === 0) {
-//       return NextResponse.json({ error: 'No data found' }, { status: 404 });
-//     }
-
-//     let headerRowIndex = 0;
-//     let headers = [];
-
-//     for (let i = 0; i < rows.length; i++) {
-//       const row = rows[i];
-//       if (row && row.length > 0 && (row[0] === 'Dimension_Subhead_Name' || row[1] === 'ITEM_NAME')) {
-//         headerRowIndex = i;
-//         headers = row;
-//         break;
-//       }
-//     }
-
-//     if (headers.length === 0) {
-//       headerRowIndex = 0;
-//       headers = ['Dimension_Subhead_Name', 'ITEM_NAME', 'Unit', 'SKU CODE', '', '', 'Form_Raised_Form'];
-//     }
-
-//     const dataRows = rows.slice(headerRowIndex + 1).filter(row => row && row.length > 0 && row[0]);
-
-//     const subheadIndex = 0;
-//     const itemNameIndex = 1;
-//     const unitIndex = 2;
-//     const skuCodeIndex = 3;
-//     const formRaisedIndex = 6;
-
-//     if (getFormRaised === 'true' && subhead) {
-//       const uniqueFormRaised = [...new Set(
-//         dataRows
-//           .filter(row => row[subheadIndex] === subhead)
-//           .map(row => row[formRaisedIndex])
-//           .filter(Boolean)
-//       )];
-//       return NextResponse.json({ type: 'formRaised', data: uniqueFormRaised });
-//     }
-
-//     if (action === 'all-data') {
-//       const subheadMap = new Map();
-
-//       dataRows.forEach(row => {
-//         const subhead = row[subheadIndex];
-//         if (!subhead) return;
-
-//         if (!subheadMap.has(subhead)) {
-//           subheadMap.set(subhead, { subhead, items: [], formRaised: new Set() });
-//         }
-
-//         const subheadData = subheadMap.get(subhead);
-//         const itemName = row[itemNameIndex];
-//         if (itemName) {
-//           subheadData.items.push({
-//             itemName,
-//             unit: row[unitIndex] || '',
-//             skuCode: row[skuCodeIndex] || '',
-//             formRaised: row[formRaisedIndex] || ''
-//           });
-//         }
-//         if (row[formRaisedIndex]) {
-//           subheadData.formRaised.add(row[formRaisedIndex]);
-//         }
-//       });
-
-//       const allData = Array.from(subheadMap.values()).map(s => ({
-//         subhead: s.subhead,
-//         items: s.items,
-//         formRaised: Array.from(s.formRaised)
-//       }));
-
-//       console.log('All data loaded, total subheads:', allData.length);
-//       return NextResponse.json({ type: 'all-data', data: allData });
-//     }
-
-//     if (!subhead && !itemName) {
-//       const uniqueSubheads = [...new Set(dataRows.map(row => row[subheadIndex]))].filter(Boolean);
-//       return NextResponse.json({ type: 'subheads', data: uniqueSubheads });
-//     }
-
-//     if (subhead && !itemName) {
-//       const filteredItems = dataRows
-//         .filter(row => row[subheadIndex] === subhead)
-//         .map(row => ({
-//           itemName: row[itemNameIndex],
-//           unit: row[unitIndex] || '',
-//           skuCode: row[skuCodeIndex] || '',
-//           formRaised: row[formRaisedIndex] || ''
-//         }))
-//         .filter(item => item.itemName);
-//       return NextResponse.json({ type: 'items', data: filteredItems });
-//     }
-
-//     if (subhead && itemName) {
-//       const selectedItem = dataRows.find(
-//         row => row[subheadIndex] === subhead && row[itemNameIndex] === itemName
-//       );
-//       if (!selectedItem) {
-//         return NextResponse.json({ error: 'Item not found' }, { status: 404 });
-//       }
-//       return NextResponse.json({
-//         type: 'details',
-//         data: {
-//           unit: selectedItem[unitIndex] || '',
-//           skuCode: selectedItem[skuCodeIndex] || '',
-//           formRaised: selectedItem[formRaisedIndex] || ''
-//         }
-//       });
-//     }
-
-//     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
-
-//   } catch (error) {
-//     console.error('Error:', error);
-//     return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 });
-//   }
-// }
-
-
+// ===================== GET HANDLER =====================
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -145,62 +11,62 @@ export async function GET(request) {
     const subhead = searchParams.get('subhead');
     const itemName = searchParams.get('itemName');
     const getFormRaised = searchParams.get('getFormRaised');
-    const getProjects = searchParams.get('getProjects'); // ✅ New param
+    const getProjects = searchParams.get('getProjects');
 
-    // ✅ Project_Name data ke liye alag range (L column = index 8 from D)
-    // D=0, E=1, F=2, G=3, H=4, I=5, J=6, K=7, L=8
+    // ✅ Projects fetch
     if (getProjects === 'true') {
       const projectResponse = await sheets.spreadsheets.values.get({
         spreadsheetId,
-        range: 'Project_Data!D4:L', // ✅ D se L tak extend kiya
+        range: 'Project_Data!D4:L',
       });
 
       const projectRows = projectResponse.data.values;
 
       if (!projectRows || projectRows.length === 0) {
-        return NextResponse.json({ error: 'No project data found' }, { status: 404 });
+        return NextResponse.json(
+          { error: 'No project data found' },
+          { status: 404 }
+        );
       }
 
-      // ✅ Header row dhundo
       let projectHeaderIndex = 0;
-      let projectHeaders = [];
 
       for (let i = 0; i < projectRows.length; i++) {
         const row = projectRows[i];
-        if (row && row.length > 0 && (row[0] === 'Dimension_Subhead_Name' || row[1] === 'ITEM_NAME')) {
+        if (
+          row &&
+          row.length > 0 &&
+          (row[0] === 'Dimension_Subhead_Name' || row[1] === 'ITEM_NAME')
+        ) {
           projectHeaderIndex = i;
-          projectHeaders = row;
           break;
         }
       }
 
-      const projectDataRows = projectRows.slice(projectHeaderIndex + 1).filter(
-        row => row && row.length > 0 && row[0]
-      );
+      const projectDataRows = projectRows
+        .slice(projectHeaderIndex + 1)
+        .filter((row) => row && row.length > 0 && row[0]);
 
-      // ✅ L column = index 8 (D se count karo: D=0,E=1,F=2,G=3,H=4,I=5,J=6,K=7,L=8)
       const projectNameIndex = 8;
 
       const uniqueProjects = [
         ...new Set(
-          projectDataRows
-            .map(row => row[projectNameIndex])
-            .filter(Boolean)
-        )
+          projectDataRows.map((row) => row[projectNameIndex]).filter(Boolean)
+        ),
       ];
 
       console.log('Total unique projects found:', uniqueProjects.length);
 
-      return NextResponse.json({ 
-        type: 'projects', 
-        data: uniqueProjects 
+      return NextResponse.json({
+        type: 'projects',
+        data: uniqueProjects,
       });
     }
 
-    // ✅ Existing code - range extend kiya D4:L tak
+    // ✅ Main data fetch
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: 'Project_Data!D4:L', // ✅ J se L kar diya
+      range: 'Project_Data!D4:L',
     });
 
     const rows = response.data.values;
@@ -214,7 +80,11 @@ export async function GET(request) {
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
-      if (row && row.length > 0 && (row[0] === 'Dimension_Subhead_Name' || row[1] === 'ITEM_NAME')) {
+      if (
+        row &&
+        row.length > 0 &&
+        (row[0] === 'Dimension_Subhead_Name' || row[1] === 'ITEM_NAME')
+      ) {
         headerRowIndex = i;
         headers = row;
         break;
@@ -223,55 +93,72 @@ export async function GET(request) {
 
     if (headers.length === 0) {
       headerRowIndex = 0;
-      headers = ['Dimension_Subhead_Name', 'ITEM_NAME', 'Unit', 'SKU CODE', '', '', 'Form_Raised_Form', '', 'Project_Name'];
+      headers = [
+        'Dimension_Subhead_Name',
+        'ITEM_NAME',
+        'Unit',
+        'SKU CODE',
+        '',
+        '',
+        'Form_Raised_Form',
+        '',
+        'Project_Name',
+      ];
     }
 
-    const dataRows = rows.slice(headerRowIndex + 1).filter(
-      row => row && row.length > 0 && row[0]
-    );
+    const dataRows = rows
+      .slice(headerRowIndex + 1)
+      .filter((row) => row && row.length > 0 && row[0]);
 
     const subheadIndex = 0;
-    const itemNameIndex = 1;
+    const itemNameIdx = 1;
     const unitIndex = 2;
     const skuCodeIndex = 3;
     const formRaisedIndex = 6;
-    const projectNameIndex = 8; // ✅ L column
+    const projectNameIndex = 8;
 
+    // getFormRaised
     if (getFormRaised === 'true' && subhead) {
-      const uniqueFormRaised = [...new Set(
-        dataRows
-          .filter(row => row[subheadIndex] === subhead)
-          .map(row => row[formRaisedIndex])
-          .filter(Boolean)
-      )];
-      return NextResponse.json({ type: 'formRaised', data: uniqueFormRaised });
+      const uniqueFormRaised = [
+        ...new Set(
+          dataRows
+            .filter((row) => row[subheadIndex] === subhead)
+            .map((row) => row[formRaisedIndex])
+            .filter(Boolean)
+        ),
+      ];
+      return NextResponse.json({
+        type: 'formRaised',
+        data: uniqueFormRaised,
+      });
     }
 
+    // all-data
     if (action === 'all-data') {
       const subheadMap = new Map();
 
-      dataRows.forEach(row => {
-        const subhead = row[subheadIndex];
-        if (!subhead) return;
+      dataRows.forEach((row) => {
+        const sh = row[subheadIndex];
+        if (!sh) return;
 
-        if (!subheadMap.has(subhead)) {
-          subheadMap.set(subhead, { 
-            subhead, 
-            items: [], 
-            formRaised: new Set() 
+        if (!subheadMap.has(sh)) {
+          subheadMap.set(sh, {
+            subhead: sh,
+            items: [],
+            formRaised: new Set(),
           });
         }
 
-        const subheadData = subheadMap.get(subhead);
-        const itemName = row[itemNameIndex];
+        const subheadData = subheadMap.get(sh);
+        const iName = row[itemNameIdx];
 
-        if (itemName) {
+        if (iName) {
           subheadData.items.push({
-            itemName,
+            itemName: iName,
             unit: row[unitIndex] || '',
             skuCode: row[skuCodeIndex] || '',
             formRaised: row[formRaisedIndex] || '',
-            projectName: row[projectNameIndex] || '' // ✅ Add kiya
+            projectName: row[projectNameIndex] || '',
           });
         }
 
@@ -280,43 +167,50 @@ export async function GET(request) {
         }
       });
 
-      const allData = Array.from(subheadMap.values()).map(s => ({
+      const allData = Array.from(subheadMap.values()).map((s) => ({
         subhead: s.subhead,
         items: s.items,
-        formRaised: Array.from(s.formRaised)
+        formRaised: Array.from(s.formRaised),
       }));
 
       console.log('All data loaded, total subheads:', allData.length);
       return NextResponse.json({ type: 'all-data', data: allData });
     }
 
+    // Subheads only
     if (!subhead && !itemName) {
       const uniqueSubheads = [
-        ...new Set(dataRows.map(row => row[subheadIndex]))
+        ...new Set(dataRows.map((row) => row[subheadIndex])),
       ].filter(Boolean);
       return NextResponse.json({ type: 'subheads', data: uniqueSubheads });
     }
 
+    // Items by subhead
     if (subhead && !itemName) {
       const filteredItems = dataRows
-        .filter(row => row[subheadIndex] === subhead)
-        .map(row => ({
-          itemName: row[itemNameIndex],
+        .filter((row) => row[subheadIndex] === subhead)
+        .map((row) => ({
+          itemName: row[itemNameIdx],
           unit: row[unitIndex] || '',
           skuCode: row[skuCodeIndex] || '',
           formRaised: row[formRaisedIndex] || '',
-          projectName: row[projectNameIndex] || '' // ✅ Add kiya
+          projectName: row[projectNameIndex] || '',
         }))
-        .filter(item => item.itemName);
+        .filter((item) => item.itemName);
       return NextResponse.json({ type: 'items', data: filteredItems });
     }
 
+    // Single item details
     if (subhead && itemName) {
       const selectedItem = dataRows.find(
-        row => row[subheadIndex] === subhead && row[itemNameIndex] === itemName
+        (row) =>
+          row[subheadIndex] === subhead && row[itemNameIdx] === itemName
       );
       if (!selectedItem) {
-        return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+        return NextResponse.json(
+          { error: 'Item not found' },
+          { status: 404 }
+        );
       }
       return NextResponse.json({
         type: 'details',
@@ -324,32 +218,35 @@ export async function GET(request) {
           unit: selectedItem[unitIndex] || '',
           skuCode: selectedItem[skuCodeIndex] || '',
           formRaised: selectedItem[formRaisedIndex] || '',
-          projectName: selectedItem[projectNameIndex] || '' // ✅ Add kiya
-        }
+          projectName: selectedItem[projectNameIndex] || '',
+        },
       });
     }
 
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
-
   } catch (error) {
-    console.error('Error:', error);
+    console.error('GET Error:', error);
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message }, 
+      { error: 'Internal server error', details: error.message },
       { status: 500 }
     );
   }
 }
 
-
-
-
-
+// ===================== HELPERS =====================
 
 // Helper: Upload photo to Google Drive
 async function uploadToGoogleDrive(base64Data, fileName) {
-  if (!base64Data || typeof base64Data !== 'string' || !base64Data.startsWith('data:')) return '';
+  if (
+    !base64Data ||
+    typeof base64Data !== 'string' ||
+    !base64Data.startsWith('data:')
+  )
+    return '';
 
-  const match = base64Data.match(/^data:([a-zA-Z0-9\/\-\+\.]+);base64,(.+)$/);
+  const match = base64Data.match(
+    /^data:([a-zA-Z0-9\/\-\+\.]+);base64,(.+)$/
+  );
   if (!match) return '';
 
   const mimeType = match[1] || 'image/jpeg';
@@ -371,6 +268,7 @@ async function uploadToGoogleDrive(base64Data, fileName) {
     });
 
     const fileId = res.data.id;
+
     await drive.permissions.create({
       fileId,
       requestBody: { role: 'reader', type: 'anyone' },
@@ -384,7 +282,7 @@ async function uploadToGoogleDrive(base64Data, fileName) {
   }
 }
 
-// Helper: Get IST Timestamp
+// Helper: IST Timestamp
 function getISTTimestamp() {
   const now = new Date();
   const istOffset = 5.5 * 60 * 60 * 1000;
@@ -416,6 +314,7 @@ async function generateBillNumber() {
         if (!isNaN(num) && num > maxNumber) maxNumber = num;
       }
     }
+
     return `Dim${(maxNumber + 1).toString().padStart(4, '0')}`;
   } catch (error) {
     console.error('Error generating bill number:', error);
@@ -423,7 +322,7 @@ async function generateBillNumber() {
   }
 }
 
-// Helper: Column C mein abhi tak ka sabse bada UID
+// Helper: Last UID
 async function getLastUID() {
   try {
     const response = await sheets.spreadsheets.values.get({
@@ -438,6 +337,7 @@ async function getLastUID() {
       const uid = parseInt(rows[i]?.[0]);
       if (!isNaN(uid) && uid > maxUID) maxUID = uid;
     }
+
     return maxUID;
   } catch (error) {
     console.error('Error getting last UID:', error);
@@ -445,112 +345,128 @@ async function getLastUID() {
   }
 }
 
-// ✅ KEY FIX: Row 8 se scan karo
-// Pehle saari empty rows collect karo (beech ki bhi)
-// Agar enough empty rows nahi hain to end mein aur rows add karo
+// Helper: Available Rows
 async function getAvailableRows(needed) {
   try {
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      // Sirf column A fetch karo — isse pata chalega kaunsi rows filled hain
       range: 'Dimension_Office_Payment!A:A',
     });
 
     const rows = response.data.values || [];
-
-    // Row 8 (index 7) se empty rows collect karo
     const emptyRows = [];
+
     for (let i = 7; i < rows.length; i++) {
       const cellValue = rows[i]?.[0];
       const isEmpty = !cellValue || cellValue.toString().trim() === '';
-      if (isEmpty) {
-        emptyRows.push(i + 1); // 1-based row number
-      }
-      // Agar enough empty rows mil gayi to bas karo
+      if (isEmpty) emptyRows.push(i + 1);
       if (emptyRows.length === needed) break;
     }
 
-    // Agar beech mein enough empty rows nahi mili
-    // to data ke baad se nayi rows add karo
     if (emptyRows.length < needed) {
-      // Last row ka index nikalo (filled ho ya na ho)
       const totalRows = Math.max(rows.length, 7);
-      let startAppend = totalRows + 1; // next row after all existing rows
-
-      // Already collected empty rows ko count karke baaki add karo
+      const startAppend = totalRows + 1;
       const stillNeeded = needed - emptyRows.length;
+
       for (let i = 0; i < stillNeeded; i++) {
         emptyRows.push(startAppend + i);
       }
     }
 
-    return emptyRows; // exactly `needed` rows return hogi
+    return emptyRows;
   } catch (error) {
     console.error('Error getting available rows:', error);
-    // Fallback: row 8 se shuru karo
     return Array.from({ length: needed }, (_, i) => 8 + i);
   }
 }
 
-// Main POST Handler
+// ===================== POST HANDLER =====================
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { officeName, payeeName, expensesHead, items, remarks } = body;
+    const {
+      officeName,
+      payeeName,
+      expensesHead,
+      items,
+      remarks,
+      paymentMode,   // ✅ NEW - Global Payment Mode (Bank/Cash)
+    } = body;
 
-    if (!officeName || !payeeName || !expensesHead || !items || items.length === 0) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    if (
+      !officeName ||
+      !payeeName ||
+      !expensesHead ||
+      !items ||
+      items.length === 0
+    ) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    // ✅ Payment Mode validation
+    if (!paymentMode || !['Bank', 'Cash'].includes(paymentMode)) {
+      return NextResponse.json(
+        { error: 'Payment Mode required - Bank ya Cash select karo' },
+        { status: 400 }
+      );
     }
 
     const timestamp = getISTTimestamp();
-
-    // ✅ BillNumber — poori submission mein EK hi (Dim0001)
     const billNumber = await generateBillNumber();
-
-    // ✅ lastUID — sheet ka max UID, loop mein +1, +2, +3 hoga
     const lastUID = await getLastUID();
-
-    // ✅ Available empty rows — exactly jitne items hain utni rows chahiye
-    // Beech ki empty rows pehle fill hongi, phir end mein append hoga
     const availableRows = await getAvailableRows(items.length);
 
-    console.log(`billNumber: ${billNumber} | lastUID: ${lastUID} | rows to fill: ${availableRows}`);
+    console.log(
+      `billNumber: ${billNumber} | lastUID: ${lastUID} | paymentMode: ${paymentMode} | rows: ${availableRows}`
+    );
 
     const batchData = [];
     const uploadedPhotos = [];
 
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-      const rowNum = availableRows[i];       // Pehli available empty row
-      const uid = lastUID + (i + 1);         // Sequential UID: lastUID+1, +2, +3...
+      const rowNum = availableRows[i];
+      const uid = lastUID + (i + 1);
 
+      // ✅ Bill Photo Upload
       let billPhotoUrl = '';
       if (item.billPhoto && item.billPhoto.startsWith('data:')) {
         const uniqueId = `${billNumber}_uid${uid}_${Date.now()}`;
-        billPhotoUrl = await uploadToGoogleDrive(item.billPhoto, `bill_${uniqueId}.jpg`);
+        billPhotoUrl = await uploadToGoogleDrive(
+          item.billPhoto,
+          `bill_${uniqueId}.jpg`
+        );
         uploadedPhotos.push(billPhotoUrl);
       }
 
-      const rowData = new Array(17).fill('');
+      // ✅ UPDATED: 19 columns (A to S)
+      const rowData = new Array(19).fill('');
 
-      rowData[0] = timestamp;           // A: Timestamp
-      rowData[1] = billNumber;          // B: Office_Bill_No  ✅ SAME   e.g. Dim0001
-      rowData[2] = uid;                 // C: UID             ✅ ALAG   e.g. 11, 12, 13
-      rowData[3] = officeName;          // D: OFFICE_NAME
-      rowData[4] = payeeName;           // E: PAYEE_NAME
-      rowData[6] = item.subhead;        // G: EXPENSES_SUBHEAD
-      rowData[7] = item.itemName;       // H: ITEM_NAME
-      rowData[8] = item.unit;           // I: UNIT
-      rowData[9] = item.skuCode;        // J: SKU_CODE
-      rowData[10] = item.quantity;      // K: QTY
-      rowData[11] = item.amount;        // L: AMOUNT
-      rowData[14] = item.formRaisedBy;  // O: RAISED_BY
-      rowData[15] = billPhotoUrl;       // P: Bill_Photo
-      rowData[16] = remarks || '';      // Q: Remarks
+      rowData[0] = timestamp;              // A: Timestamp
+      rowData[1] = billNumber;             // B: Office_Bill_No
+      rowData[2] = uid;                    // C: UID
+      rowData[3] = officeName;             // D: OFFICE_NAME
+      rowData[4] = payeeName;             // E: PAYEE_NAME
+      rowData[5] = item.subhead;           // G: EXPENSES_SUBHEAD
+      rowData[6] = item.itemName;          // H: ITEM_NAME
+      rowData[7] = item.description || ''; // I: DESCRIPTION ✅ NEW
+      rowData[8] = item.unit;              // J: UNIT
+      rowData[9] = item.skuCode;          // K: SKU_CODE
+      rowData[10] = item.quantity;         // L: QTY
+      rowData[11] = item.amount;           // M: AMOUNT
+      rowData[12] = '';                    // N: (empty)
+      rowData[13] = '';                    // O: (empty)
+      rowData[14] = item.formRaisedBy;     // P: RAISED_BY
+      rowData[15] = billPhotoUrl;          // Q: Bill_Photo
+      rowData[16] = paymentMode;           // R: PAYMENT_MODE ✅ NEW
+      rowData[17] = remarks || '';         // S: REMARKS
 
       batchData.push({
-        range: `Dimension_Office_Payment!A${rowNum}:Q${rowNum}`,
-        values: [rowData]
+        range: `Dimension_Office_Payment!A${rowNum}:S${rowNum}`,
+        values: [rowData],
       });
     }
 
@@ -558,24 +474,33 @@ export async function POST(request) {
       spreadsheetId,
       requestBody: {
         valueInputOption: 'USER_ENTERED',
-        data: batchData
-      }
+        data: batchData,
+      },
     });
 
-    return NextResponse.json({
-      success: true,
-      message: `${items.length} item(s) submitted successfully`,
-      data: {
-        billNumber,
-        timestamp,
-        totalItems: items.length,
-        totalAmount: items.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0),
-        billPhotos: uploadedPhotos
-      }
-    }, { status: 201 });
-
+    return NextResponse.json(
+      {
+        success: true,
+        message: `${items.length} item(s) submitted successfully`,
+        data: {
+          billNumber,
+          timestamp,
+          paymentMode,
+          totalItems: items.length,
+          totalAmount: items.reduce(
+            (sum, item) => sum + (parseFloat(item.amount) || 0),
+            0
+          ),
+          billPhotos: uploadedPhotos,
+        },
+      },
+      { status: 201 }
+    );
   } catch (error) {
-    console.error('Error:', error);
-    return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 });
+    console.error('POST Error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', details: error.message },
+      { status: 500 }
+    );
   }
 }

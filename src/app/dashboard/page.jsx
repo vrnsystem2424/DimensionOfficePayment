@@ -1,13 +1,12 @@
 
 // 'use client';
 
-// import { useState, useEffect } from 'react';
-// import { useRouter } from 'next/navigation';
+// import { useState, useEffect, useCallback } from 'react';
+// import { useRouter, useSearchParams } from 'next/navigation';
 // import { LogOut, Menu, X, ChevronDown, ChevronUp } from 'lucide-react';
 
 // import Summary   from '../summary/page';
 // import Approve1  from '../Office/Approve1/page';
-// import Approve2  from '../Office/Approvel2/page';
 // import BillEntry from '../Office/BillEntry/page';
 // import Payment   from '../Office/Payment/page';
 
@@ -18,18 +17,17 @@
 // import TransferBank from '../reconciliation/transferBank/transferbank';
 
 // const USER_TABS = {
-//   ADMIN: ['summary', 'approve1', 'approve2', 'billentry', 'payment', 'reconciliation', 'form', 'actualpayment', 'transferbank'],
+//   ADMIN: ['summary', 'approve1', 'billentry', 'payment', 'reconciliation', 'form', 'actualpayment', 'transferbank'],
 //   VIJAY: ['approve1', 'billentry', 'payment', 'reconciliation', 'form'],
 //   RICHA: ['approve1'],
 // };
 
-// const OFFICE_TABS = ['approve1', 'approve2', 'billentry', 'payment'];
+// const OFFICE_TABS = ['approve1', 'billentry', 'payment'];
 // const PAYMENT_TABS = ['reconciliation', 'form', 'actualpayment', 'transferbank'];
 
 // const TAB_LABELS = {
 //   summary: 'Summary',
 //   approve1: 'Approve 1',
-//   approve2: 'Approve 2',
 //   billentry: 'Bill Entry',
 //   payment: 'Payment',
 //   reconciliation: 'Reconciliation',
@@ -40,13 +38,27 @@
 
 // export default function Dashboard() {
 //   const router = useRouter();
+//   const searchParams = useSearchParams();
+
 //   const [user, setUser] = useState(null);
 //   const [allowedTabs, setAllowedTabs] = useState([]);
-//   const [activeTab, setActiveTab] = useState('summary');
 //   const [officeDropdownOpen, setOfficeDropdownOpen] = useState(false);
 //   const [paymentDropdownOpen, setPaymentDropdownOpen] = useState(false);
 //   const [sidebarOpen, setSidebarOpen] = useState(false);
 //   const [loading, setLoading] = useState(true);
+
+//   // ✅ URL se activeTab read karo
+//   const tabFromUrl = searchParams.get('tab');
+//   const [activeTab, setActiveTabState] = useState('summary');
+
+//   // ✅ Custom setter — state + URL dono update kare
+//   const setActiveTab = useCallback((tab) => {
+//     setActiveTabState(tab);
+//     // URL mein ?tab=xyz update karo bina full reload ke
+//     const url = new URL(window.location.href);
+//     url.searchParams.set('tab', tab);
+//     window.history.replaceState({}, '', url.toString());
+//   }, []);
 
 //   useEffect(() => {
 //     const token = sessionStorage.getItem('token');
@@ -61,11 +73,24 @@
 //       const key = (parsed?.userType || '').toUpperCase().replace(/\s+/g, '');
 //       const tabs = USER_TABS[key] || ['summary'];
 //       setAllowedTabs(tabs);
-//       setActiveTab(tabs[0]);
+
+//       // ✅ Reload pe URL se tab restore karo
+//       // Agar URL mein valid tab hai to wahi use karo, warna first allowed tab
+//       const urlTab = searchParams.get('tab');
+//       if (urlTab && tabs.includes(urlTab)) {
+//         setActiveTabState(urlTab);
+//       } else {
+//         // Pehli baar ya invalid tab — default set karo + URL update karo
+//         const defaultTab = tabs[0];
+//         setActiveTabState(defaultTab);
+//         const url = new URL(window.location.href);
+//         url.searchParams.set('tab', defaultTab);
+//         window.history.replaceState({}, '', url.toString());
+//       }
 //     }
 
 //     setLoading(false);
-//   }, [router]);
+//   }, [router, searchParams]);
 
 //   const handleLogout = () => {
 //     sessionStorage.clear();
@@ -81,7 +106,6 @@
 //     switch (activeTab) {
 //       case 'summary':        return <Summary user={user} />;
 //       case 'approve1':       return <Approve1 user={user} />;
-//       case 'approve2':       return <Approve2 user={user} />;
 //       case 'billentry':      return <BillEntry user={user} />;
 //       case 'payment':        return <Payment user={user} />;
 //       case 'reconciliation': return <Reconciliation user={user} />;
@@ -106,7 +130,6 @@
 //   const showOffice = visibleOfficeTabs.length > 0;
 //   const showPayment = visiblePaymentTabs.length > 0;
 
-//   // reconciliation group के tabs को full width में दिखाना
 //   const isReconciliationTab = ['reconciliation', 'form', 'actualpayment', 'transferbank'].includes(activeTab);
 
 //   return (
@@ -241,6 +264,17 @@
 //               <button onClick={() => setSidebarOpen(false)}><X className="w-5 h-5" /></button>
 //             </div>
 //             <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+//               {showSummary && (
+//                 <button
+//                   onClick={() => { setActiveTab('summary'); setSidebarOpen(false); }}
+//                   className={`w-full px-4 py-3 rounded-lg text-left text-sm font-medium transition-colors ${
+//                     activeTab === 'summary' ? 'bg-blue-100 text-blue-800' : 'text-gray-700 hover:bg-gray-100'
+//                   }`}
+//                 >
+//                   Summary
+//                 </button>
+//               )}
+
 //               {visibleOfficeTabs.length > 0 && (
 //                 <div className="mb-4">
 //                   <p className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Office</p>
@@ -274,17 +308,6 @@
 //                   ))}
 //                 </div>
 //               )}
-
-//               {showSummary && (
-//                 <button
-//                   onClick={() => { setActiveTab('summary'); setSidebarOpen(false); }}
-//                   className={`w-full px-4 py-3 rounded-lg text-left text-sm font-medium transition-colors ${
-//                     activeTab === 'summary' ? 'bg-blue-100 text-blue-800' : 'text-gray-700 hover:bg-gray-100'
-//                   }`}
-//                 >
-//                   Summary
-//                 </button>
-//               )}
 //             </nav>
 //             <div className="p-4 border-t">
 //               <button onClick={handleLogout} className="w-full bg-red-600 text-white py-2 rounded-lg text-sm font-medium flex items-center justify-center space-x-2">
@@ -296,15 +319,13 @@
 //         </div>
 //       )}
 
-//       {/* Main Content - reconciliation tabs को complete full-width */}
-//       <div className="pt-16 lg:pt-20">  {/* header height adjust */}
+//       {/* Main Content */}
+//       <div className="pt-16 lg:pt-20">
 //         {isReconciliationTab ? (
-//           // Full width for reconciliation tabs - no container, no padding restriction
 //           <div className="w-screen min-h-[calc(100vh-4rem)]">
 //             {renderContent()}
 //           </div>
 //         ) : (
-//           // Other tabs - keep centered
 //           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 //             <div className="bg-white rounded-xl shadow-lg p-6 min-h-[calc(100vh-9rem)]">
 //               <h2 className="text-lg font-bold text-gray-800 mb-5">
@@ -324,8 +345,8 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { LogOut, Menu, X, ChevronDown, ChevronUp } from 'lucide-react';
 
 import Summary   from '../summary/page';
@@ -339,14 +360,17 @@ import Form from '../reconciliation/Form/Form';
 import ActualPaymentIn from '../reconciliation/ActualPyamentIN/ActualPaymentIn';
 import TransferBank from '../reconciliation/transferBank/transferbank';
 
+// ✅ NEW - Bank Charges & Interest Form
+import BankChargesInterestForm from '../reconciliation/BankChargesInterestForm/BankChargesInterestForm';
+
 const USER_TABS = {
-  ADMIN: ['summary', 'approve1', 'billentry', 'payment', 'reconciliation', 'form', 'actualpayment', 'transferbank'],
-  VIJAY: ['approve1', 'billentry', 'payment', 'reconciliation', 'form'],
+  ADMIN: ['summary', 'approve1', 'billentry', 'payment', 'reconciliation', 'form', 'actualpayment', 'transferbank', 'bankcharges'],
+  VIJAY: ['approve1', 'billentry', 'payment', 'reconciliation', 'form', 'bankcharges'],
   RICHA: ['approve1'],
 };
 
 const OFFICE_TABS = ['approve1', 'billentry', 'payment'];
-const PAYMENT_TABS = ['reconciliation', 'form', 'actualpayment', 'transferbank'];
+const PAYMENT_TABS = ['reconciliation', 'form', 'actualpayment', 'transferbank', 'bankcharges']; // ✅ Added
 
 const TAB_LABELS = {
   summary: 'Summary',
@@ -357,17 +381,29 @@ const TAB_LABELS = {
   form: 'Form',
   actualpayment: 'Actual Payment In',
   transferbank: 'Transfer Bank',
+  bankcharges: 'Bank Charges & Interest',  // ✅ Added
 };
 
 export default function Dashboard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [user, setUser] = useState(null);
   const [allowedTabs, setAllowedTabs] = useState([]);
-  const [activeTab, setActiveTab] = useState('summary');
   const [officeDropdownOpen, setOfficeDropdownOpen] = useState(false);
   const [paymentDropdownOpen, setPaymentDropdownOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const tabFromUrl = searchParams.get('tab');
+  const [activeTab, setActiveTabState] = useState('summary');
+
+  const setActiveTab = useCallback((tab) => {
+    setActiveTabState(tab);
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', tab);
+    window.history.replaceState({}, '', url.toString());
+  }, []);
 
   useEffect(() => {
     const token = sessionStorage.getItem('token');
@@ -382,11 +418,21 @@ export default function Dashboard() {
       const key = (parsed?.userType || '').toUpperCase().replace(/\s+/g, '');
       const tabs = USER_TABS[key] || ['summary'];
       setAllowedTabs(tabs);
-      setActiveTab(tabs[0]);
+
+      const urlTab = searchParams.get('tab');
+      if (urlTab && tabs.includes(urlTab)) {
+        setActiveTabState(urlTab);
+      } else {
+        const defaultTab = tabs[0];
+        setActiveTabState(defaultTab);
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', defaultTab);
+        window.history.replaceState({}, '', url.toString());
+      }
     }
 
     setLoading(false);
-  }, [router]);
+  }, [router, searchParams]);
 
   const handleLogout = () => {
     sessionStorage.clear();
@@ -398,6 +444,7 @@ export default function Dashboard() {
     setPaymentDropdownOpen(false);
   };
 
+  // ✅ Added bankcharges case
   const renderContent = () => {
     switch (activeTab) {
       case 'summary':        return <Summary user={user} />;
@@ -408,6 +455,7 @@ export default function Dashboard() {
       case 'form':           return <Form user={user} />;
       case 'actualpayment':  return <ActualPaymentIn user={user} />;
       case 'transferbank':   return <TransferBank user={user} />;
+      case 'bankcharges':    return <BankChargesInterestForm user={user} />;  // ✅ Added
       default:               return <Summary user={user} />;
     }
   };
@@ -426,7 +474,8 @@ export default function Dashboard() {
   const showOffice = visibleOfficeTabs.length > 0;
   const showPayment = visiblePaymentTabs.length > 0;
 
-  const isReconciliationTab = ['reconciliation', 'form', 'actualpayment', 'transferbank'].includes(activeTab);
+  // ✅ Added bankcharges to reconciliation check
+  const isReconciliationTab = ['reconciliation', 'form', 'actualpayment', 'transferbank', 'bankcharges'].includes(activeTab);
 
   return (
     <div className="min-h-screen bg-gray-50" onClick={closeDropdowns}>
@@ -510,7 +559,7 @@ export default function Dashboard() {
                   </button>
 
                   {paymentDropdownOpen && (
-                    <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-52 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-50">
+                    <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-50">
                       {visiblePaymentTabs.map(tab => (
                         <button
                           key={tab}
@@ -560,6 +609,17 @@ export default function Dashboard() {
               <button onClick={() => setSidebarOpen(false)}><X className="w-5 h-5" /></button>
             </div>
             <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+              {showSummary && (
+                <button
+                  onClick={() => { setActiveTab('summary'); setSidebarOpen(false); }}
+                  className={`w-full px-4 py-3 rounded-lg text-left text-sm font-medium transition-colors ${
+                    activeTab === 'summary' ? 'bg-blue-100 text-blue-800' : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  Summary
+                </button>
+              )}
+
               {visibleOfficeTabs.length > 0 && (
                 <div className="mb-4">
                   <p className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Office</p>
@@ -577,6 +637,7 @@ export default function Dashboard() {
                 </div>
               )}
 
+              {/* ✅ Payment section with bankcharges included */}
               {visiblePaymentTabs.length > 0 && (
                 <div className="mb-4">
                   <p className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Payment</p>
@@ -592,17 +653,6 @@ export default function Dashboard() {
                     </button>
                   ))}
                 </div>
-              )}
-
-              {showSummary && (
-                <button
-                  onClick={() => { setActiveTab('summary'); setSidebarOpen(false); }}
-                  className={`w-full px-4 py-3 rounded-lg text-left text-sm font-medium transition-colors ${
-                    activeTab === 'summary' ? 'bg-blue-100 text-blue-800' : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  Summary
-                </button>
               )}
             </nav>
             <div className="p-4 border-t">
