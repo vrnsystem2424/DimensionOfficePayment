@@ -4,7 +4,7 @@
 // import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 // import {
 //   useGetAllFormDataQuery,
-//   useGetProjectNamesQuery,   // ✅ NEW
+//   useGetProjectNamesQuery,
 //   useSubmitPaymentMutation
 // } from '../../features/expensesForm';
 
@@ -98,6 +98,159 @@
 //   );
 // }
 
+// // ─── Payment Mode Dropdown ─────────────────────────────────────────────────────
+// const PAYMENT_MODES = ['Bank', 'Cash'];
+
+// function PaymentModeDropdown({ value, onChange }) {
+//   const [open, setOpen] = useState(false);
+//   const containerRef = useRef(null);
+
+//   useEffect(() => {
+//     const handler = (e) => {
+//       if (containerRef.current && !containerRef.current.contains(e.target)) {
+//         setOpen(false);
+//       }
+//     };
+//     document.addEventListener('mousedown', handler);
+//     return () => document.removeEventListener('mousedown', handler);
+//   }, []);
+
+//   // Icon for each mode
+//   const modeIcon = (mode) => mode === 'Bank' ? '🏦' : '💵';
+
+//   // Badge color based on selected mode
+//   const badgeStyle = value === 'Bank'
+//     ? { background: '#eff6ff', border: '1px solid #bfdbfe', color: '#2563eb' }
+//     : value === 'Cash'
+//       ? { background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#16a34a' }
+//       : {};
+
+//   return (
+//     <div ref={containerRef} style={{ position: 'relative' }}>
+
+//       {/* Trigger Button */}
+//       <div
+//         onClick={() => setOpen(prev => !prev)}
+//         style={{
+//           display: 'flex', alignItems: 'center',
+//           justifyContent: 'space-between',
+//           padding: '10px 14px',
+//           border: `1.5px solid ${open ? '#6366f1' : '#e2e8f0'}`,
+//           borderRadius: '10px',
+//           background: '#fff',
+//           cursor: 'pointer',
+//           fontSize: '14px',
+//           color: value ? '#1e293b' : '#94a3b8',
+//           transition: 'border-color 0.2s',
+//           userSelect: 'none',
+//         }}
+//       >
+//         <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+//           {value ? (
+//             <>
+//               <span style={{
+//                 ...badgeStyle,
+//                 padding: '2px 10px',
+//                 borderRadius: '20px',
+//                 fontSize: '12px',
+//                 fontWeight: '700',
+//                 display: 'inline-flex',
+//                 alignItems: 'center',
+//                 gap: '5px'
+//               }}>
+//                 {modeIcon(value)} {value}
+//               </span>
+//             </>
+//           ) : (
+//             <span style={{ color: '#94a3b8' }}>
+//               💳 Select payment mode...
+//             </span>
+//           )}
+//         </span>
+//         <span style={{
+//           color: '#94a3b8', fontSize: '11px',
+//           transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+//           transition: 'transform 0.2s',
+//           display: 'inline-block'
+//         }}>▼</span>
+//       </div>
+
+//       {/* Dropdown Options */}
+//       {open && (
+//         <div style={{
+//           position: 'absolute', top: 'calc(100% + 4px)',
+//           left: 0, right: 0,
+//           background: '#fff',
+//           border: '1.5px solid #e0e7ff',
+//           borderRadius: '10px',
+//           boxShadow: '0 8px 24px rgba(99,102,241,0.12)',
+//           zIndex: 9999,
+//           overflow: 'hidden'
+//         }}>
+//           {PAYMENT_MODES.map((mode, idx) => {
+//             const isSelected = value === mode;
+//             const optionBadge = mode === 'Bank'
+//               ? { background: '#eff6ff', border: '1px solid #bfdbfe', color: '#2563eb' }
+//               : { background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#16a34a' };
+
+//             return (
+//               <div
+//                 key={mode}
+//                 onMouseDown={(e) => {
+//                   e.preventDefault();
+//                   onChange(mode);
+//                   setOpen(false);
+//                 }}
+//                 style={{
+//                   padding: '12px 14px',
+//                   cursor: 'pointer',
+//                   display: 'flex',
+//                   alignItems: 'center',
+//                   justifyContent: 'space-between',
+//                   borderBottom: idx < PAYMENT_MODES.length - 1
+//                     ? '1px solid #f1f5f9' : 'none',
+//                   background: isSelected ? '#f0f4ff' : '#fff',
+//                   transition: 'background 0.12s',
+//                 }}
+//                 onMouseEnter={e =>
+//                   e.currentTarget.style.background = '#f0f4ff'}
+//                 onMouseLeave={e =>
+//                   e.currentTarget.style.background =
+//                     isSelected ? '#f0f4ff' : '#fff'}
+//               >
+//                 <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+//                   <span style={{
+//                     ...optionBadge,
+//                     padding: '3px 12px',
+//                     borderRadius: '20px',
+//                     fontSize: '12px',
+//                     fontWeight: '700',
+//                     display: 'inline-flex',
+//                     alignItems: 'center',
+//                     gap: '5px'
+//                   }}>
+//                     {modeIcon(mode)} {mode}
+//                   </span>
+//                   <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+//                     {mode === 'Bank' ? 'Online / Transfer' : 'Physical Cash'}
+//                   </span>
+//                 </span>
+
+//                 {/* Checkmark for selected */}
+//                 {isSelected && (
+//                   <span style={{
+//                     color: '#6366f1', fontWeight: '700', fontSize: '14px'
+//                   }}>✓</span>
+//                 )}
+//               </div>
+//             );
+//           })}
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
+
 // function Label({ children, required }) {
 //   return (
 //     <label style={{
@@ -142,17 +295,16 @@
 //   id: Date.now() + Math.random(),
 //   subhead: '', subheadSearch: '',
 //   itemName: '', itemNameSearch: '',
+//   description: '',
 //   unit: '', skuCode: '',
-//   quantity: '', amount: '', remarks: ''
+//   quantity: '', amount: '',
 // });
 
 // // ─── Main Component ────────────────────────────────────────────────────────────
 // export default function ExpensesFormComponent() {
 
-//   // ✅ Office Name ab dynamic dropdown hai
 //   const [selectedProject, setSelectedProject] = useState('');
 //   const [projectSearch, setProjectSearch] = useState('');
-
 //   const [payeeName, setPayeeName] = useState('');
 //   const [selectedFormRaised, setSelectedFormRaised] = useState('');
 //   const [formRaisedSearch, setFormRaisedSearch] = useState('');
@@ -160,16 +312,20 @@
 //   const [billPhotoPreview, setBillPhotoPreview] = useState('');
 //   const [fileInputKey, setFileInputKey] = useState(0);
 //   const [items, setItems] = useState([EMPTY_ITEM()]);
+//   const [globalRemarks, setGlobalRemarks] = useState('');
+
+//   // ✅ NEW: Payment Mode State
+//   const [paymentMode, setPaymentMode] = useState('');
 
 //   // ✅ API Hooks
 //   const { data: allData, isLoading } = useGetAllFormDataQuery();
 //   const {
 //     data: projectNames,
 //     isLoading: projectsLoading
-//   } = useGetProjectNamesQuery();                          // ✅ NEW
+//   } = useGetProjectNamesQuery();
 //   const [submitPayment, { isLoading: submitting }] = useSubmitPaymentMutation();
 
-//   // ✅ Project dropdown filtering
+//   // Project dropdown filtering
 //   const filteredProjects = useMemo(() => {
 //     if (!projectNames) return [];
 //     if (!projectSearch) return projectNames;
@@ -235,6 +391,7 @@
 //     updateItem(id, {
 //       subhead, subheadSearch: subhead,
 //       itemName: '', itemNameSearch: '',
+//       description: '',
 //       unit: '', skuCode: ''
 //     });
 //   };
@@ -263,10 +420,10 @@
 //     (s, i) => s + (parseFloat(i.amount) || 0), 0
 //   );
 
-//   // ✅ Full form reset
+//   // ✅ Full form reset — payment mode bhi reset hoga
 //   const resetForm = () => {
-//     setSelectedProject('');       // ✅ Reset project
-//     setProjectSearch('');         // ✅ Reset project search
+//     setSelectedProject('');
+//     setProjectSearch('');
 //     setPayeeName('');
 //     setSelectedFormRaised('');
 //     setFormRaisedSearch('');
@@ -274,15 +431,19 @@
 //     setBillPhotoPreview('');
 //     setFileInputKey(prev => prev + 1);
 //     setItems([EMPTY_ITEM()]);
+//     setGlobalRemarks('');
+//     setPaymentMode(''); // ✅ Reset payment mode
 //   };
 
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();
 
-//     // ✅ Project validation
 //     if (!selectedProject) return alert('Please select a Project / Office Name');
 //     if (!payeeName) return alert('Please enter Payee Name');
 //     if (!selectedFormRaised) return alert('Please select Form Raised By');
+
+//     // ✅ Payment mode validation
+//     if (!paymentMode) return alert('Please select a Payment Mode');
 
 //     for (const item of items) {
 //       if (!item.subhead) return alert('Please select subhead for all items');
@@ -292,27 +453,28 @@
 //     }
 
 //     const payload = {
-//       officeName: selectedProject,    // ✅ Dynamic project name
+//       officeName: selectedProject,
 //       payeeName,
+//       paymentMode,            // ✅ NEW: Payment mode in payload
 //       expensesHead: 'Office Expenses',
 //       items: items.map(i => ({
 //         subhead: i.subhead,
 //         itemName: i.itemName,
+//         description: i.description || '',
 //         unit: i.unit,
 //         skuCode: i.skuCode,
 //         quantity: i.quantity,
 //         amount: i.amount,
 //         formRaisedBy: selectedFormRaised,
 //         billPhoto: billPhoto || '',
-//         remarks: i.remarks || ''
 //       })),
-//       remarks: ''
+//       remarks: globalRemarks || ''
 //     };
 
 //     try {
 //       const result = await submitPayment(payload).unwrap();
 //       alert(
-//         `✅ Success!\nProject: ${selectedProject}\nBill No: ${result.data.billNumber}\nTotal: ₹${result.data.totalAmount}`
+//         `✅ Success!\nProject: ${selectedProject}\nPayment: ${paymentMode}\nBill No: ${result.data.billNumber}\nTotal: ₹${result.data.totalAmount}`
 //       );
 //       resetForm();
 //     } catch (err) {
@@ -320,7 +482,6 @@
 //     }
 //   };
 
-//   // ✅ Loading state — dono APIs ka wait
 //   if (isLoading || projectsLoading) {
 //     return (
 //       <div style={{
@@ -384,7 +545,6 @@
 //               margin: '2px 0 0',
 //               color: 'rgba(255,255,255,0.72)', fontSize: '13px'
 //             }}>
-//               {/* ✅ Dynamic project name in header */}
 //               {selectedProject || 'Select Project'} · Submit expense claims
 //             </p>
 //           </div>
@@ -408,7 +568,7 @@
 //             gap: '16px'
 //           }}>
 
-//             {/* ✅ Office / Project Name — Ab Searchable Dropdown */}
+//             {/* Office / Project Name */}
 //             <div>
 //               <Label required>Office / Project Name</Label>
 //               <SearchableDropdown
@@ -424,7 +584,6 @@
 //                 options={filteredProjects}
 //                 placeholder="🏢 Search project..."
 //               />
-//               {/* ✅ Selected project badge */}
 //               {selectedProject && (
 //                 <div style={{
 //                   marginTop: '6px',
@@ -483,6 +642,43 @@
 //                 options={filteredFormRaised}
 //                 placeholder="Type to search or select person..."
 //               />
+//             </div>
+
+//             {/* ✅ NEW: Payment Mode — Full width, same row style as others */}
+//             <div style={{ gridColumn: '1 / -1' }}>
+//               <Label required>Payment Mode</Label>
+//               <PaymentModeDropdown
+//                 value={paymentMode}
+//                 onChange={setPaymentMode}
+//               />
+
+//               {/* ✅ Selected payment mode badge (same pattern as project) */}
+//               {paymentMode && (
+//                 <div style={{
+//                   marginTop: '8px',
+//                   display: 'inline-flex',
+//                   alignItems: 'center', gap: '8px',
+//                   background: paymentMode === 'Bank' ? '#eff6ff' : '#f0fdf4',
+//                   border: `1px solid ${paymentMode === 'Bank' ? '#bfdbfe' : '#bbf7d0'}`,
+//                   borderRadius: '8px',
+//                   padding: '5px 12px',
+//                   fontSize: '12px',
+//                   fontWeight: '700',
+//                   color: paymentMode === 'Bank' ? '#2563eb' : '#16a34a'
+//                 }}>
+//                   {paymentMode === 'Bank' ? '🏦' : '💵'} {paymentMode} selected
+//                   <button
+//                     type="button"
+//                     onClick={() => setPaymentMode('')}
+//                     style={{
+//                       background: 'none', border: 'none',
+//                       color: '#94a3b8', cursor: 'pointer',
+//                       fontSize: '13px', padding: '0 2px',
+//                       lineHeight: 1
+//                     }}
+//                   >✕</button>
+//                 </div>
+//               )}
 //             </div>
 
 //             {/* Bill Photo */}
@@ -552,8 +748,6 @@
 
 //           {items.map((item, index) => (
 //             <div key={item.id}>
-
-//               {/* Item Card */}
 //               <div style={{
 //                 border: '1.5px solid #e0e7ff',
 //                 borderRadius: '14px', padding: '20px',
@@ -658,6 +852,31 @@
 //                     />
 //                   </div>
 
+//                   {/* Item Description */}
+//                   <div style={{ gridColumn: '1 / -1' }}>
+//                     <Label>Description (Optional)</Label>
+//                     <textarea
+//                       value={item.description}
+//                       onChange={e => updateItem(item.id, {
+//                         description: e.target.value
+//                       })}
+//                       placeholder="A brief description of this item..."
+//                       rows={2}
+//                       style={{
+//                         width: '100%', padding: '10px 12px',
+//                         border: '1.5px solid #e2e8f0',
+//                         borderRadius: '10px', fontSize: '14px',
+//                         color: '#1e293b', resize: 'vertical',
+//                         fontFamily: 'inherit', background: '#fff',
+//                         outline: 'none'
+//                       }}
+//                       onFocus={e =>
+//                         e.target.style.borderColor = '#6366f1'}
+//                       onBlur={e =>
+//                         e.target.style.borderColor = '#e2e8f0'}
+//                     />
+//                   </div>
+
 //                   {/* Unit */}
 //                   <div>
 //                     <Label>Unit</Label>
@@ -696,31 +915,6 @@
 //                       step="0.01" required
 //                     />
 //                   </div>
-
-//                   {/* Remarks */}
-//                   <div style={{ gridColumn: '1 / -1' }}>
-//                     <Label>Remarks (Optional)</Label>
-//                     <textarea
-//                       value={item.remarks}
-//                       onChange={e => updateItem(item.id, {
-//                         remarks: e.target.value
-//                       })}
-//                       placeholder="Any notes for this item..."
-//                       rows={2}
-//                       style={{
-//                         width: '100%', padding: '10px 12px',
-//                         border: '1.5px solid #e2e8f0',
-//                         borderRadius: '10px', fontSize: '14px',
-//                         color: '#1e293b', resize: 'vertical',
-//                         fontFamily: 'inherit', background: '#fff',
-//                         outline: 'none'
-//                       }}
-//                       onFocus={e =>
-//                         e.target.style.borderColor = '#6366f1'}
-//                       onBlur={e =>
-//                         e.target.style.borderColor = '#e2e8f0'}
-//                     />
-//                   </div>
 //                 </div>
 //               </div>
 
@@ -752,9 +946,37 @@
 //                   + Add Item Below
 //                 </button>
 //               </div>
-
 //             </div>
 //           ))}
+
+//           {/* ═══ Global Remarks ═══ */}
+//           <div style={{
+//             fontSize: '12px', fontWeight: '700', color: '#6366f1',
+//             textTransform: 'uppercase', letterSpacing: '0.08em',
+//             marginBottom: '16px',
+//             display: 'flex', alignItems: 'center', gap: '6px',
+//             marginTop: '28px'
+//           }}>
+//             <span>📝</span> General Remarks (Optional)
+//           </div>
+//           <div style={{ marginBottom: '24px' }}>
+//             <textarea
+//               value={globalRemarks}
+//               onChange={e => setGlobalRemarks(e.target.value)}
+//               placeholder="Any general remarks for this entire submission..."
+//               rows={3}
+//               style={{
+//                 width: '100%', padding: '12px',
+//                 border: '1.5px solid #e2e8f0',
+//                 borderRadius: '10px', fontSize: '14px',
+//                 color: '#1e293b', resize: 'vertical',
+//                 fontFamily: 'inherit', background: '#fff',
+//                 outline: 'none'
+//               }}
+//               onFocus={e => e.target.style.borderColor = '#6366f1'}
+//               onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+//             />
+//           </div>
 
 //           {/* ═══ Total ═══ */}
 //           <div style={{
@@ -773,11 +995,27 @@
 //               }}>Total Amount</div>
 //               <div style={{
 //                 fontSize: '12px', color: '#cbd5e1',
-//                 marginTop: '2px'
+//                 marginTop: '2px',
+//                 display: 'flex', alignItems: 'center', gap: '8px'
 //               }}>
 //                 {items.length} item{items.length !== 1 ? 's' : ''}
-//                 {/* ✅ Show project name in total */}
 //                 {selectedProject && ` · ${selectedProject}`}
+
+//                 {/* ✅ Payment mode badge in total section */}
+//                 {paymentMode && (
+//                   <span style={{
+//                     padding: '1px 8px',
+//                     borderRadius: '20px',
+//                     fontSize: '11px',
+//                     fontWeight: '700',
+//                     background: paymentMode === 'Bank' ? '#eff6ff' : '#f0fdf4',
+//                     color: paymentMode === 'Bank' ? '#2563eb' : '#16a34a',
+//                     border: `1px solid ${paymentMode === 'Bank'
+//                       ? '#bfdbfe' : '#bbf7d0'}`
+//                   }}>
+//                     {paymentMode === 'Bank' ? '🏦' : '💵'} {paymentMode}
+//                   </span>
+//                 )}
 //               </div>
 //             </div>
 //             <div style={{
@@ -828,6 +1066,10 @@
 //     </div>
 //   );
 // }
+
+
+
+
 
 
 
@@ -947,10 +1189,8 @@ function PaymentModeDropdown({ value, onChange }) {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // Icon for each mode
   const modeIcon = (mode) => mode === 'Bank' ? '🏦' : '💵';
 
-  // Badge color based on selected mode
   const badgeStyle = value === 'Bank'
     ? { background: '#eff6ff', border: '1px solid #bfdbfe', color: '#2563eb' }
     : value === 'Cash'
@@ -959,8 +1199,6 @@ function PaymentModeDropdown({ value, onChange }) {
 
   return (
     <div ref={containerRef} style={{ position: 'relative' }}>
-
-      {/* Trigger Button */}
       <div
         onClick={() => setOpen(prev => !prev)}
         style={{
@@ -979,20 +1217,18 @@ function PaymentModeDropdown({ value, onChange }) {
       >
         <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {value ? (
-            <>
-              <span style={{
-                ...badgeStyle,
-                padding: '2px 10px',
-                borderRadius: '20px',
-                fontSize: '12px',
-                fontWeight: '700',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px'
-              }}>
-                {modeIcon(value)} {value}
-              </span>
-            </>
+            <span style={{
+              ...badgeStyle,
+              padding: '2px 10px',
+              borderRadius: '20px',
+              fontSize: '12px',
+              fontWeight: '700',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px'
+            }}>
+              {modeIcon(value)} {value}
+            </span>
           ) : (
             <span style={{ color: '#94a3b8' }}>
               💳 Select payment mode...
@@ -1007,7 +1243,6 @@ function PaymentModeDropdown({ value, onChange }) {
         }}>▼</span>
       </div>
 
-      {/* Dropdown Options */}
       {open && (
         <div style={{
           position: 'absolute', top: 'calc(100% + 4px)',
@@ -1050,7 +1285,9 @@ function PaymentModeDropdown({ value, onChange }) {
                   e.currentTarget.style.background =
                     isSelected ? '#f0f4ff' : '#fff'}
               >
-                <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{
+                  display: 'flex', alignItems: 'center', gap: '10px'
+                }}>
                   <span style={{
                     ...optionBadge,
                     padding: '3px 12px',
@@ -1067,8 +1304,6 @@ function PaymentModeDropdown({ value, onChange }) {
                     {mode === 'Bank' ? 'Online / Transfer' : 'Physical Cash'}
                   </span>
                 </span>
-
-                {/* Checkmark for selected */}
                 {isSelected && (
                   <span style={{
                     color: '#6366f1', fontWeight: '700', fontSize: '14px'
@@ -1083,6 +1318,7 @@ function PaymentModeDropdown({ value, onChange }) {
   );
 }
 
+// ─── Label ────────────────────────────────────────────────────────────────────
 function Label({ children, required }) {
   return (
     <label style={{
@@ -1095,6 +1331,7 @@ function Label({ children, required }) {
   );
 }
 
+// ─── Input ────────────────────────────────────────────────────────────────────
 function Input({
   value, onChange, placeholder, type = 'text',
   disabled, readOnly, required, min, step
@@ -1123,6 +1360,7 @@ function Input({
   );
 }
 
+// ─── Empty Item ───────────────────────────────────────────────────────────────
 const EMPTY_ITEM = () => ({
   id: Date.now() + Math.random(),
   subhead: '', subheadSearch: '',
@@ -1135,29 +1373,29 @@ const EMPTY_ITEM = () => ({
 // ─── Main Component ────────────────────────────────────────────────────────────
 export default function ExpensesFormComponent() {
 
-  const [selectedProject, setSelectedProject] = useState('');
-  const [projectSearch, setProjectSearch] = useState('');
-  const [payeeName, setPayeeName] = useState('');
+  // ── States ──────────────────────────────────────────────────────────────────
+  const [selectedProject, setSelectedProject]       = useState('');
+  const [projectSearch, setProjectSearch]           = useState('');
+  const [payeeName, setPayeeName]                   = useState('');
   const [selectedFormRaised, setSelectedFormRaised] = useState('');
-  const [formRaisedSearch, setFormRaisedSearch] = useState('');
-  const [billPhoto, setBillPhoto] = useState('');
-  const [billPhotoPreview, setBillPhotoPreview] = useState('');
-  const [fileInputKey, setFileInputKey] = useState(0);
-  const [items, setItems] = useState([EMPTY_ITEM()]);
-  const [globalRemarks, setGlobalRemarks] = useState('');
+  const [formRaisedSearch, setFormRaisedSearch]     = useState('');
+  const [billPhoto, setBillPhoto]                   = useState('');
+  const [billPhotoPreview, setBillPhotoPreview]     = useState('');
+  const [fileInputKey, setFileInputKey]             = useState(0);
+  const [items, setItems]                           = useState([EMPTY_ITEM()]);
+  const [globalRemarks, setGlobalRemarks]           = useState('');
+  const [paymentMode, setPaymentMode]               = useState('');
 
-  // ✅ NEW: Payment Mode State
-  const [paymentMode, setPaymentMode] = useState('');
+  // ── Photo Refs ───────────────────────────────────────────────────────────────
+  const galleryInputRef = useRef(null);
+  const cameraInputRef  = useRef(null);
 
-  // ✅ API Hooks
-  const { data: allData, isLoading } = useGetAllFormDataQuery();
-  const {
-    data: projectNames,
-    isLoading: projectsLoading
-  } = useGetProjectNamesQuery();
-  const [submitPayment, { isLoading: submitting }] = useSubmitPaymentMutation();
+  // ── API Hooks ────────────────────────────────────────────────────────────────
+  const { data: allData, isLoading }            = useGetAllFormDataQuery();
+  const { data: projectNames, isLoading: projectsLoading } = useGetProjectNamesQuery();
+  const [submitPayment, { isLoading: submitting }]         = useSubmitPaymentMutation();
 
-  // Project dropdown filtering
+  // ── Filtered Projects ────────────────────────────────────────────────────────
   const filteredProjects = useMemo(() => {
     if (!projectNames) return [];
     if (!projectSearch) return projectNames;
@@ -1166,7 +1404,7 @@ export default function ExpensesFormComponent() {
     );
   }, [projectSearch, projectNames]);
 
-  // Form Raised options
+  // ── Form Raised Options ──────────────────────────────────────────────────────
   const allFormRaisedOptions = useMemo(() => {
     if (!allData?.formRaised) return [];
     const all = new Set();
@@ -1183,6 +1421,7 @@ export default function ExpensesFormComponent() {
     );
   }, [formRaisedSearch, allFormRaisedOptions]);
 
+  // ── Subheads & Items ─────────────────────────────────────────────────────────
   const subheadsList = allData?.subheads || [];
 
   const getFilteredSubheads = (search) => {
@@ -1200,6 +1439,7 @@ export default function ExpensesFormComponent() {
     );
   };
 
+  // ── Item CRUD ────────────────────────────────────────────────────────────────
   const addItemAfter = (afterIndex) => {
     setItems(prev => {
       const newItems = [...prev];
@@ -1223,8 +1463,7 @@ export default function ExpensesFormComponent() {
     updateItem(id, {
       subhead, subheadSearch: subhead,
       itemName: '', itemNameSearch: '',
-      description: '',
-      unit: '', skuCode: ''
+      description: '', unit: '', skuCode: ''
     });
   };
 
@@ -1237,6 +1476,7 @@ export default function ExpensesFormComponent() {
     });
   };
 
+  // ── Photo Handlers ───────────────────────────────────────────────────────────
   const handleBillPhoto = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -1248,11 +1488,20 @@ export default function ExpensesFormComponent() {
     reader.readAsDataURL(file);
   };
 
+  const removeBillPhoto = () => {
+    setBillPhoto('');
+    setBillPhotoPreview('');
+    setFileInputKey(prev => prev + 1);
+    if (galleryInputRef.current) galleryInputRef.current.value = '';
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
+  };
+
+  // ── Total ────────────────────────────────────────────────────────────────────
   const totalAmount = items.reduce(
     (s, i) => s + (parseFloat(i.amount) || 0), 0
   );
 
-  // ✅ Full form reset — payment mode bhi reset hoga
+  // ── Reset ────────────────────────────────────────────────────────────────────
   const resetForm = () => {
     setSelectedProject('');
     setProjectSearch('');
@@ -1264,41 +1513,40 @@ export default function ExpensesFormComponent() {
     setFileInputKey(prev => prev + 1);
     setItems([EMPTY_ITEM()]);
     setGlobalRemarks('');
-    setPaymentMode(''); // ✅ Reset payment mode
+    setPaymentMode('');
   };
 
+  // ── Submit ───────────────────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!selectedProject) return alert('Please select a Project / Office Name');
-    if (!payeeName) return alert('Please enter Payee Name');
+    if (!selectedProject)    return alert('Please select a Project / Office Name');
+    if (!payeeName)          return alert('Please enter Payee Name');
     if (!selectedFormRaised) return alert('Please select Form Raised By');
-
-    // ✅ Payment mode validation
-    if (!paymentMode) return alert('Please select a Payment Mode');
+    if (!paymentMode)        return alert('Please select a Payment Mode');
 
     for (const item of items) {
-      if (!item.subhead) return alert('Please select subhead for all items');
+      if (!item.subhead)  return alert('Please select subhead for all items');
       if (!item.itemName) return alert('Please select item name for all items');
       if (!item.quantity) return alert('Please enter quantity for all items');
-      if (!item.amount) return alert('Please enter amount for all items');
+      if (!item.amount)   return alert('Please enter amount for all items');
     }
 
     const payload = {
-      officeName: selectedProject,
+      officeName:   selectedProject,
       payeeName,
-      paymentMode,            // ✅ NEW: Payment mode in payload
+      paymentMode,
       expensesHead: 'Office Expenses',
       items: items.map(i => ({
-        subhead: i.subhead,
-        itemName: i.itemName,
-        description: i.description || '',
-        unit: i.unit,
-        skuCode: i.skuCode,
-        quantity: i.quantity,
-        amount: i.amount,
+        subhead:      i.subhead,
+        itemName:     i.itemName,
+        description:  i.description || '',
+        unit:         i.unit,
+        skuCode:      i.skuCode,
+        quantity:     i.quantity,
+        amount:       i.amount,
         formRaisedBy: selectedFormRaised,
-        billPhoto: billPhoto || '',
+        billPhoto:    billPhoto || '',
       })),
       remarks: globalRemarks || ''
     };
@@ -1314,6 +1562,7 @@ export default function ExpensesFormComponent() {
     }
   };
 
+  // ── Loading ──────────────────────────────────────────────────────────────────
   if (isLoading || projectsLoading) {
     return (
       <div style={{
@@ -1335,6 +1584,7 @@ export default function ExpensesFormComponent() {
     );
   }
 
+  // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <div style={{
       minHeight: '100vh',
@@ -1345,6 +1595,7 @@ export default function ExpensesFormComponent() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
         * { box-sizing: border-box; }
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
 
       <div style={{
@@ -1384,7 +1635,7 @@ export default function ExpensesFormComponent() {
 
         <form onSubmit={handleSubmit} style={{ padding: '32px' }}>
 
-          {/* ═══ Section: Basic Info ═══ */}
+          {/* ═══ Basic Info Section ═══ */}
           <div style={{
             fontSize: '12px', fontWeight: '700', color: '#6366f1',
             textTransform: 'uppercase', letterSpacing: '0.08em',
@@ -1394,11 +1645,7 @@ export default function ExpensesFormComponent() {
             <span>📋</span> Basic Information
           </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '16px'
-          }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
 
             {/* Office / Project Name */}
             <div>
@@ -1419,28 +1666,19 @@ export default function ExpensesFormComponent() {
               {selectedProject && (
                 <div style={{
                   marginTop: '6px',
-                  display: 'inline-flex',
-                  alignItems: 'center', gap: '6px',
-                  background: '#f0f4ff',
-                  border: '1px solid #c7d2fe',
-                  borderRadius: '8px',
-                  padding: '4px 10px',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  color: '#6366f1'
+                  display: 'inline-flex', alignItems: 'center', gap: '6px',
+                  background: '#f0f4ff', border: '1px solid #c7d2fe',
+                  borderRadius: '8px', padding: '4px 10px',
+                  fontSize: '12px', fontWeight: '600', color: '#6366f1'
                 }}>
                   ✅ {selectedProject}
                   <button
                     type="button"
-                    onClick={() => {
-                      setSelectedProject('');
-                      setProjectSearch('');
-                    }}
+                    onClick={() => { setSelectedProject(''); setProjectSearch(''); }}
                     style={{
                       background: 'none', border: 'none',
                       color: '#94a3b8', cursor: 'pointer',
-                      fontSize: '13px', padding: '0 2px',
-                      lineHeight: 1
+                      fontSize: '13px', padding: '0 2px', lineHeight: 1
                     }}
                   >✕</button>
                 </div>
@@ -1474,28 +1712,31 @@ export default function ExpensesFormComponent() {
                 options={filteredFormRaised}
                 placeholder="Type to search or select person..."
               />
+              {selectedFormRaised && (
+                <div style={{
+                  fontSize: '11px', color: '#10b981',
+                  marginTop: '4px', fontWeight: '600'
+                }}>
+                  ✓ {selectedFormRaised}
+                </div>
+              )}
             </div>
 
-            {/* ✅ NEW: Payment Mode — Full width, same row style as others */}
+            {/* Payment Mode */}
             <div style={{ gridColumn: '1 / -1' }}>
               <Label required>Payment Mode</Label>
               <PaymentModeDropdown
                 value={paymentMode}
                 onChange={setPaymentMode}
               />
-
-              {/* ✅ Selected payment mode badge (same pattern as project) */}
               {paymentMode && (
                 <div style={{
                   marginTop: '8px',
-                  display: 'inline-flex',
-                  alignItems: 'center', gap: '8px',
+                  display: 'inline-flex', alignItems: 'center', gap: '8px',
                   background: paymentMode === 'Bank' ? '#eff6ff' : '#f0fdf4',
                   border: `1px solid ${paymentMode === 'Bank' ? '#bfdbfe' : '#bbf7d0'}`,
-                  borderRadius: '8px',
-                  padding: '5px 12px',
-                  fontSize: '12px',
-                  fontWeight: '700',
+                  borderRadius: '8px', padding: '5px 12px',
+                  fontSize: '12px', fontWeight: '700',
                   color: paymentMode === 'Bank' ? '#2563eb' : '#16a34a'
                 }}>
                   {paymentMode === 'Bank' ? '🏦' : '💵'} {paymentMode} selected
@@ -1505,70 +1746,173 @@ export default function ExpensesFormComponent() {
                     style={{
                       background: 'none', border: 'none',
                       color: '#94a3b8', cursor: 'pointer',
-                      fontSize: '13px', padding: '0 2px',
-                      lineHeight: 1
+                      fontSize: '13px', padding: '0 2px', lineHeight: 1
                     }}
                   >✕</button>
                 </div>
               )}
             </div>
 
-            {/* Bill Photo */}
+            {/* ═══ Bill Photo - Camera + Gallery ═══ */}
             <div style={{ gridColumn: '1 / -1' }}>
               <Label>Bill Photo (Optional)</Label>
+
+              {/* Hidden Inputs */}
               <input
-                required
-                key={fileInputKey}
+                ref={galleryInputRef}
+                key={`gallery-${fileInputKey}`}
                 type="file"
                 accept="image/*"
                 onChange={handleBillPhoto}
-                style={{
-                  width: '100%', padding: '9px 12px',
-                  border: '1.5px dashed #c7d2fe',
-                  borderRadius: '10px', fontSize: '13px',
-                  color: '#64748b', cursor: 'pointer',
-                  background: '#fafbff'
-                }}
+                style={{ display: 'none' }}
               />
+              <input
+                ref={cameraInputRef}
+                key={`camera-${fileInputKey}`}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleBillPhoto}
+                style={{ display: 'none' }}
+              />
+
+              {/* Buttons - Photo nahi hai tab */}
+              {!billPhotoPreview && (
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+
+                  {/* Gallery Button */}
+                  <button
+                    type="button"
+                    onClick={() => galleryInputRef.current?.click()}
+                    style={{
+                      flex: 1, minWidth: '140px', padding: '14px 16px',
+                      background: '#f0f4ff',
+                      border: '1.5px dashed #a5b4fc',
+                      borderRadius: '12px', cursor: 'pointer',
+                      display: 'flex', flexDirection: 'column',
+                      alignItems: 'center', justifyContent: 'center',
+                      gap: '6px', transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.background = '#e0e7ff';
+                      e.currentTarget.style.borderColor = '#6366f1';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.background = '#f0f4ff';
+                      e.currentTarget.style.borderColor = '#a5b4fc';
+                    }}
+                  >
+                    <span style={{ fontSize: '24px' }}>🖼️</span>
+                    <span style={{
+                      fontSize: '13px', fontWeight: '600', color: '#6366f1'
+                    }}>
+                      Choose from Gallery
+                    </span>
+                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                      Select existing photo
+                    </span>
+                  </button>
+
+                  {/* Camera Button */}
+                  <button
+                    type="button"
+                    onClick={() => cameraInputRef.current?.click()}
+                    style={{
+                      flex: 1, minWidth: '140px', padding: '14px 16px',
+                      background: '#faf5ff',
+                      border: '1.5px dashed #d8b4fe',
+                      borderRadius: '12px', cursor: 'pointer',
+                      display: 'flex', flexDirection: 'column',
+                      alignItems: 'center', justifyContent: 'center',
+                      gap: '6px', transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.background = '#ede9fe';
+                      e.currentTarget.style.borderColor = '#8b5cf6';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.background = '#faf5ff';
+                      e.currentTarget.style.borderColor = '#d8b4fe';
+                    }}
+                  >
+                    <span style={{ fontSize: '24px' }}>📷</span>
+                    <span style={{
+                      fontSize: '13px', fontWeight: '600', color: '#8b5cf6'
+                    }}>
+                      Take Photo
+                    </span>
+                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                      Open camera to capture
+                    </span>
+                  </button>
+                </div>
+              )}
+
+              {/* Photo Preview - Photo hai tab */}
               {billPhotoPreview && (
                 <div style={{
-                  marginTop: '10px',
-                  display: 'flex',
-                  alignItems: 'center', gap: '10px'
+                  marginTop: '8px', padding: '12px',
+                  background: '#f0f4ff',
+                  border: '1.5px solid #c7d2fe',
+                  borderRadius: '12px',
+                  display: 'flex', alignItems: 'center', gap: '14px',
                 }}>
                   <img
                     src={billPhotoPreview}
                     alt="Bill"
                     style={{
-                      height: '60px', borderRadius: '8px',
-                      border: '1.5px solid #e0e7ff'
+                      height: '70px', width: '70px',
+                      objectFit: 'cover', borderRadius: '10px',
+                      border: '2px solid #a5b4fc'
                     }}
                   />
-                  <button type="button"
-                    onClick={() => {
-                      setBillPhoto('');
-                      setBillPhotoPreview('');
-                      setFileInputKey(prev => prev + 1);
-                    }}
-                    style={{
-                      background: 'none', border: 'none',
-                      color: '#ef4444', cursor: 'pointer',
-                      fontSize: '12px', padding: 0
+                  <div style={{ flex: 1 }}>
+                    <div style={{
+                      fontSize: '13px', fontWeight: '600',
+                      color: '#6366f1', marginBottom: '4px'
                     }}>
-                    ✕ Remove
-                  </button>
+                      ✅ Photo attached
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                      Bill photo selected successfully
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <button
+                      type="button"
+                      onClick={() => galleryInputRef.current?.click()}
+                      style={{
+                        background: '#f0f4ff', color: '#6366f1',
+                        border: '1px solid #c7d2fe',
+                        borderRadius: '8px', padding: '5px 10px',
+                        fontSize: '11px', fontWeight: '600', cursor: 'pointer'
+                      }}
+                    >
+                      🔄 Change
+                    </button>
+                    <button
+                      type="button"
+                      onClick={removeBillPhoto}
+                      style={{
+                        background: '#fff0f0', color: '#ef4444',
+                        border: '1px solid #fecaca',
+                        borderRadius: '8px', padding: '5px 10px',
+                        fontSize: '11px', fontWeight: '600', cursor: 'pointer'
+                      }}
+                    >
+                      ✕ Remove
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
+
           </div>
 
           {/* Divider */}
-          <div style={{
-            height: '1px', background: '#f1f5f9',
-            margin: '28px 0'
-          }} />
+          <div style={{ height: '1px', background: '#f1f5f9', margin: '28px 0' }} />
 
-          {/* ═══ Section: Items ═══ */}
+          {/* ═══ Items Section ═══ */}
           <div style={{
             fontSize: '12px', fontWeight: '700', color: '#6366f1',
             textTransform: 'uppercase', letterSpacing: '0.08em',
@@ -1588,43 +1932,35 @@ export default function ExpensesFormComponent() {
 
                 {/* Item Header */}
                 <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '16px'
+                  display: 'flex', justifyContent: 'space-between',
+                  alignItems: 'center', marginBottom: '16px'
                 }}>
                   <span style={{
                     background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
                     color: '#fff', borderRadius: '8px',
-                    padding: '4px 12px', fontSize: '12px',
-                    fontWeight: '700'
+                    padding: '4px 12px', fontSize: '12px', fontWeight: '700'
                   }}>
                     Item #{index + 1}
                   </span>
                   {items.length > 1 && (
-                    <button type="button"
+                    <button
+                      type="button"
                       onClick={() => removeItem(item.id)}
                       style={{
                         background: '#fff0f0', color: '#ef4444',
                         border: '1.5px solid #fecaca',
                         borderRadius: '8px', padding: '4px 12px',
-                        fontSize: '12px', fontWeight: '600',
-                        cursor: 'pointer'
+                        fontSize: '12px', fontWeight: '600', cursor: 'pointer'
                       }}
-                      onMouseEnter={e =>
-                        e.currentTarget.style.background = '#fef2f2'}
-                      onMouseLeave={e =>
-                        e.currentTarget.style.background = '#fff0f0'}>
+                      onMouseEnter={e => e.currentTarget.style.background = '#fef2f2'}
+                      onMouseLeave={e => e.currentTarget.style.background = '#fff0f0'}
+                    >
                       ✕ Remove
                     </button>
                   )}
                 </div>
 
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '14px'
-                }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
 
                   {/* Subhead */}
                   <div>
@@ -1635,11 +1971,16 @@ export default function ExpensesFormComponent() {
                         subheadSearch: val,
                         ...(val === '' ? { subhead: '' } : {})
                       })}
-                      onSelect={(subhead) =>
-                        handleSubheadSelect(item.id, subhead)}
+                      onSelect={(subhead) => handleSubheadSelect(item.id, subhead)}
                       options={getFilteredSubheads(item.subheadSearch)}
                       placeholder="Search subhead..."
                     />
+                    {item.subhead && (
+                      <div style={{
+                        fontSize: '11px', color: '#10b981',
+                        marginTop: '4px', fontWeight: '600'
+                      }}>✓ Selected</div>
+                    )}
                   </div>
 
                   {/* Item Name */}
@@ -1654,44 +1995,40 @@ export default function ExpensesFormComponent() {
                         }
                         updateItem(item.id, {
                           itemNameSearch: val,
-                          ...(val === '' ? {
-                            itemName: '', unit: '', skuCode: ''
-                          } : {})
+                          ...(val === '' ? { itemName: '', unit: '', skuCode: '' } : {})
                         });
                       }}
                       onSelect={(opt) => handleItemSelect(item.id, opt)}
-                      options={getFilteredItems(
-                        item.subhead, item.itemNameSearch
-                      )}
-                      placeholder={item.subhead
-                        ? 'Search item...'
-                        : 'Select subhead first'}
+                      options={getFilteredItems(item.subhead, item.itemNameSearch)}
+                      placeholder={item.subhead ? 'Search item...' : 'Select subhead first'}
                       disabled={!item.subhead}
                       renderOption={(opt) => (
                         <div>
                           <div style={{
-                            fontWeight: '600', color: '#1e293b',
-                            fontSize: '13px'
+                            fontWeight: '600', color: '#1e293b', fontSize: '13px'
                           }}>{opt.itemName}</div>
                           <div style={{
-                            fontSize: '11px', color: '#94a3b8',
-                            marginTop: '2px'
+                            fontSize: '11px', color: '#94a3b8', marginTop: '2px'
                           }}>
                             Unit: {opt.unit} · SKU: {opt.skuCode}
                           </div>
                         </div>
                       )}
                     />
+                    {item.itemName && (
+                      <div style={{
+                        fontSize: '11px', color: '#10b981',
+                        marginTop: '4px', fontWeight: '600'
+                      }}>✓ Selected</div>
+                    )}
                   </div>
 
-                  {/* Item Description */}
+                  {/* Description */}
                   <div style={{ gridColumn: '1 / -1' }}>
                     <Label>Description (Optional)</Label>
                     <textarea
                       value={item.description}
-                      onChange={e => updateItem(item.id, {
-                        description: e.target.value
-                      })}
+                      onChange={e => updateItem(item.id, { description: e.target.value })}
                       placeholder="A brief description of this item..."
                       rows={2}
                       style={{
@@ -1699,28 +2036,24 @@ export default function ExpensesFormComponent() {
                         border: '1.5px solid #e2e8f0',
                         borderRadius: '10px', fontSize: '14px',
                         color: '#1e293b', resize: 'vertical',
-                        fontFamily: 'inherit', background: '#fff',
-                        outline: 'none'
+                        fontFamily: 'inherit', background: '#fff', outline: 'none',
+                        transition: 'border-color 0.2s',
                       }}
-                      onFocus={e =>
-                        e.target.style.borderColor = '#6366f1'}
-                      onBlur={e =>
-                        e.target.style.borderColor = '#e2e8f0'}
+                      onFocus={e => e.target.style.borderColor = '#6366f1'}
+                      onBlur={e => e.target.style.borderColor = '#e2e8f0'}
                     />
                   </div>
 
                   {/* Unit */}
                   <div>
                     <Label>Unit</Label>
-                    <Input value={item.unit} readOnly
-                      placeholder="Auto-filled" />
+                    <Input value={item.unit} readOnly placeholder="Auto-filled" />
                   </div>
 
                   {/* SKU Code */}
                   <div>
                     <Label>SKU Code</Label>
-                    <Input value={item.skuCode} readOnly
-                      placeholder="Auto-filled" />
+                    <Input value={item.skuCode} readOnly placeholder="Auto-filled" />
                   </div>
 
                   {/* Quantity */}
@@ -1728,11 +2061,15 @@ export default function ExpensesFormComponent() {
                     <Label required>Quantity</Label>
                     <Input
                       type="number" value={item.quantity}
-                      onChange={e => updateItem(item.id, {
-                        quantity: e.target.value
-                      })}
+                      onChange={e => updateItem(item.id, { quantity: e.target.value })}
                       placeholder="0" min="0" step="1" required
                     />
+                    {item.quantity && parseFloat(item.quantity) > 0 && (
+                      <div style={{
+                        fontSize: '11px', color: '#10b981',
+                        marginTop: '4px', fontWeight: '600'
+                      }}>✓ {item.quantity} qty</div>
+                    )}
                   </div>
 
                   {/* Amount */}
@@ -1740,13 +2077,19 @@ export default function ExpensesFormComponent() {
                     <Label required>Amount (₹)</Label>
                     <Input
                       type="number" value={item.amount}
-                      onChange={e => updateItem(item.id, {
-                        amount: e.target.value
-                      })}
-                      placeholder="0.00" min="0"
-                      step="0.01" required
+                      onChange={e => updateItem(item.id, { amount: e.target.value })}
+                      placeholder="0.00" min="0" step="0.01" required
                     />
+                    {item.amount && parseFloat(item.amount) > 0 && (
+                      <div style={{
+                        fontSize: '11px', color: '#10b981',
+                        marginTop: '4px', fontWeight: '600'
+                      }}>
+                        ✓ ₹{parseFloat(item.amount).toLocaleString('en-IN')}
+                      </div>
+                    )}
                   </div>
+
                 </div>
               </div>
 
@@ -1759,9 +2102,8 @@ export default function ExpensesFormComponent() {
                     width: '100%', padding: '9px',
                     background: '#fff', color: '#6366f1',
                     border: '1.5px dashed #a5b4fc',
-                    borderRadius: '10px',
-                    fontSize: '13px', fontWeight: '700',
-                    cursor: 'pointer',
+                    borderRadius: '10px', fontSize: '13px',
+                    fontWeight: '700', cursor: 'pointer',
                     display: 'flex', alignItems: 'center',
                     justifyContent: 'center', gap: '6px',
                     transition: 'all 0.15s',
@@ -1785,9 +2127,8 @@ export default function ExpensesFormComponent() {
           <div style={{
             fontSize: '12px', fontWeight: '700', color: '#6366f1',
             textTransform: 'uppercase', letterSpacing: '0.08em',
-            marginBottom: '16px',
-            display: 'flex', alignItems: 'center', gap: '6px',
-            marginTop: '28px'
+            marginBottom: '16px', marginTop: '28px',
+            display: 'flex', alignItems: 'center', gap: '6px'
           }}>
             <span>📝</span> General Remarks (Optional)
           </div>
@@ -1802,8 +2143,8 @@ export default function ExpensesFormComponent() {
                 border: '1.5px solid #e2e8f0',
                 borderRadius: '10px', fontSize: '14px',
                 color: '#1e293b', resize: 'vertical',
-                fontFamily: 'inherit', background: '#fff',
-                outline: 'none'
+                fontFamily: 'inherit', background: '#fff', outline: 'none',
+                transition: 'border-color 0.2s',
               }}
               onFocus={e => e.target.style.borderColor = '#6366f1'}
               onBlur={e => e.target.style.borderColor = '#e2e8f0'}
@@ -1826,24 +2167,18 @@ export default function ExpensesFormComponent() {
                 letterSpacing: '0.08em'
               }}>Total Amount</div>
               <div style={{
-                fontSize: '12px', color: '#cbd5e1',
-                marginTop: '2px',
+                fontSize: '12px', color: '#cbd5e1', marginTop: '2px',
                 display: 'flex', alignItems: 'center', gap: '8px'
               }}>
                 {items.length} item{items.length !== 1 ? 's' : ''}
                 {selectedProject && ` · ${selectedProject}`}
-
-                {/* ✅ Payment mode badge in total section */}
                 {paymentMode && (
                   <span style={{
-                    padding: '1px 8px',
-                    borderRadius: '20px',
-                    fontSize: '11px',
-                    fontWeight: '700',
+                    padding: '1px 8px', borderRadius: '20px',
+                    fontSize: '11px', fontWeight: '700',
                     background: paymentMode === 'Bank' ? '#eff6ff' : '#f0fdf4',
                     color: paymentMode === 'Bank' ? '#2563eb' : '#16a34a',
-                    border: `1px solid ${paymentMode === 'Bank'
-                      ? '#bfdbfe' : '#bbf7d0'}`
+                    border: `1px solid ${paymentMode === 'Bank' ? '#bfdbfe' : '#bbf7d0'}`
                   }}>
                     {paymentMode === 'Bank' ? '🏦' : '💵'} {paymentMode}
                   </span>
@@ -1855,13 +2190,12 @@ export default function ExpensesFormComponent() {
               color: '#6366f1', letterSpacing: '-0.02em'
             }}>
               ₹{totalAmount.toLocaleString('en-IN', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
+                minimumFractionDigits: 2, maximumFractionDigits: 2
               })}
             </div>
           </div>
 
-          {/* ═══ Submit ═══ */}
+          {/* ═══ Submit Button ═══ */}
           <button
             type="submit"
             disabled={submitting}
@@ -1874,22 +2208,15 @@ export default function ExpensesFormComponent() {
               borderRadius: '12px', padding: '14px',
               fontSize: '16px', fontWeight: '700',
               cursor: submitting ? 'not-allowed' : 'pointer',
-              boxShadow: submitting
-                ? 'none'
-                : '0 4px 16px rgba(99,102,241,0.35)',
-              letterSpacing: '0.01em',
-              transition: 'all 0.2s',
+              boxShadow: submitting ? 'none' : '0 4px 16px rgba(99,102,241,0.35)',
+              letterSpacing: '0.01em', transition: 'all 0.2s',
             }}
-            onMouseEnter={e => {
-              if (!submitting) e.currentTarget.style.opacity = '0.92';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.opacity = '1';
-            }}
+            onMouseEnter={e => { if (!submitting) e.currentTarget.style.opacity = '0.92'; }}
+            onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
           >
             {submitting
               ? '⏳ Submitting...'
-              : `🚀 Submit ${items.length} Item${items.length !== 1 ? 's' : ''}`
+              : `🚀 Submit ${items.length} Item${items.length !== 1 ? 's' : ''} · ₹${totalAmount.toLocaleString('en-IN')}`
             }
           </button>
 

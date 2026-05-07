@@ -46,7 +46,7 @@ export async function GET(request) {
         APPROVAL_DOER:       (row[13] || '').toString().trim(),
         RAISED_BY_1:         (row[14] || '').toString().trim(),
         Bill_Photo:          (row[15] || '').toString().trim(),
-        PAYMENT_MODE_3:      (row[31] || '').toString().trim(),
+        PAYMENT_MODE_3:      (row[16] || '').toString().trim(),
         Vendor_Name_4:       (row[38] || '').toString().trim(),
         BILL_NO_4:           (row[39] || '').toString().trim(),
         BILL_DATE_4:         (row[40] || '').toString().trim(),

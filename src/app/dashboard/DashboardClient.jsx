@@ -23,7 +23,7 @@ import BankChargesInterestForm from '../reconciliation/BankChargesInterestForm/B
 const USER_TABS = {
   ADMIN: ['summary', 'approve1', 'billentry', 'payment', 'reconciliation', 'form', 'actualpayment', 'transferbank', 'bankcharges'],
   VIJAY: ['approve1', 'billentry', 'payment', 'reconciliation', 'form', 'bankcharges'],
-  RICHA: ['approve1'],
+  RICHA: ['approve1','billentry','payment'],
 };
 
 const OFFICE_TABS = ['approve1', 'billentry', 'payment'];
