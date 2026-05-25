@@ -1,632 +1,4 @@
 
-// // app/reconciliation/page.js
-// 'use client';
-
-// import { useState, useMemo, useEffect } from 'react';
-// import { 
-//   useGetPendingApprovalsQuery, 
-//   useUpdateApprovalMutation,
-//   useLazyGetBankBalanceQuery 
-// } from '../../../features/reconciliation/reconciliationSlice';
-
-// const Reconciliation = () => {
-//   const { data, isLoading, isError, refetch } = useGetPendingApprovalsQuery();
-//   const [updateApproval, { isLoading: isUpdating }] = useUpdateApprovalMutation();
-  
-//   // Bank Balance Query (Lazy - manually trigger)
-//   const [
-//     fetchBankBalance, 
-//     { data: bankBalanceData, isLoading: isLoadingBalance, isError: isBalanceError }
-//   ] = useLazyGetBankBalanceQuery();
-  
-//   // Filter states
-//   const [selectedBank, setSelectedBank] = useState('all');
-//   const [selectedPaymentMode, setSelectedPaymentMode] = useState('all');
-//   const [searchTerm, setSearchTerm] = useState('');
-
-//   // Modal state
-//   const [isModalOpen, setIsModalOpen] = useState(false);
-//   const [selectedItem, setSelectedItem] = useState(null);
-//   const [formData, setFormData] = useState({
-//     STATUS_2: '',
-//     BANK_CLOSING_BALANCE_2: '',
-//     REMARK_2: ''
-//   });
-
-//   // Data ko array mein convert karo
-//   const approvalsList = Array.isArray(data) 
-//     ? data 
-//     : data?.data || data?.result || data?.items || data?.records || [];
-
-//   // Unique banks list for dropdown
-//   const uniqueBanks = useMemo(() => {
-//     const banks = approvalsList
-//       .map(item => item.BANK_DETAILS)
-//       .filter(bank => bank && bank.trim() !== '');
-//     return [...new Set(banks)];
-//   }, [approvalsList]);
-
-//   // Unique payment modes for dropdown
-//   const uniquePaymentModes = useMemo(() => {
-//     const modes = approvalsList
-//       .map(item => item.PAYMENT_MODE)
-//       .filter(mode => mode && mode.trim() !== '');
-//     return [...new Set(modes)];
-//   }, [approvalsList]);
-
-//   // Jab bank select ho, balance fetch karo
-//   useEffect(() => {
-//     if (selectedBank && selectedBank !== 'all') {
-//       fetchBankBalance(selectedBank);
-//     }
-//   }, [selectedBank, fetchBankBalance]);
-
-//   // Handle bank selection
-//   const handleBankChange = (e) => {
-//     const bankName = e.target.value;
-//     setSelectedBank(bankName);
-//   };
-
-//   // Filtered data based on selections
-//   const filteredData = useMemo(() => {
-//     return approvalsList.filter(item => {
-//       const bankMatch = selectedBank === 'all' || item.BANK_DETAILS === selectedBank;
-//       const modeMatch = selectedPaymentMode === 'all' || item.PAYMENT_MODE === selectedPaymentMode;
-//       const searchMatch = searchTerm === '' || 
-//         item.Contractor_Vendor_Firm_Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//         item.UID?.toLowerCase().includes(searchTerm.toLowerCase());
-      
-//       return bankMatch && modeMatch && searchMatch;
-//     });
-//   }, [approvalsList, selectedBank, selectedPaymentMode, searchTerm]);
-
-//   // Clear all filters
-//   const clearFilters = () => {
-//     setSelectedBank('all');
-//     setSelectedPaymentMode('all');
-//     setSearchTerm('');
-//   };
-
-//   // Open modal with selected item
-//   const handleOpenModal = (item) => {
-//     setSelectedItem(item);
-//     setFormData({
-//       STATUS_2: '',
-//       BANK_CLOSING_BALANCE_2: '',
-//       REMARK_2: ''
-//     });
-//     setIsModalOpen(true);
-//   };
-
-//   // Close modal
-//   const handleCloseModal = () => {
-//     setIsModalOpen(false);
-//     setSelectedItem(null);
-//     setFormData({
-//       STATUS_2: '',
-//       BANK_CLOSING_BALANCE_2: '',
-//       REMARK_2: ''
-//     });
-//   };
-
-//   // Handle form input change
-//   const handleInputChange = (e) => {
-//     const { name, value } = e.target;
-//     setFormData(prev => ({
-//       ...prev,
-//       [name]: value
-//     }));
-//   };
-
-//   // Handle form submit
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-    
-//     if (!formData.STATUS_2) {
-//       alert('Please select a status');
-//       return;
-//     }
-
-//     try {
-//       await updateApproval({
-//         uid: selectedItem.UID,
-//         STATUS_2: formData.STATUS_2,
-//         BANK_CLOSING_BALANCE_2: formData.BANK_CLOSING_BALANCE_2,
-//         REMARK_2: formData.REMARK_2
-//       }).unwrap();
-      
-//       alert('Updated successfully!');
-//       handleCloseModal();
-//     } catch (err) {
-//       console.error('Failed to update:', err);
-//       alert('Failed to update');
-//     }
-//   };
-
-//   // Format balance (Indian format)
-//   const formatBalance = (balance) => {
-//     if (!balance) return '₹0';
-//     const num = parseFloat(balance.toString().replace(/,/g, ''));
-//     if (isNaN(num)) return balance;
-//     return '₹' + num.toLocaleString('en-IN');
-//   };
-
-//   // Loading state
-//   if (isLoading) {
-//     return (
-//       <div className="flex items-center justify-center min-h-screen bg-gray-50">
-//         <div className="text-center">
-//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-//           <p className="mt-4 text-gray-600">Loading pending approvals...</p>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   // Error state
-//   if (isError) {
-//     return (
-//       <div className="flex items-center justify-center min-h-screen bg-gray-50">
-//         <div className="text-center bg-white p-8 rounded-lg shadow-md">
-//           <div className="text-red-500 text-5xl mb-4">⚠️</div>
-//           <h2 className="text-xl font-semibold text-gray-800 mb-2">Error Loading Data</h2>
-//           <p className="text-gray-600 mb-4">Something went wrong while fetching data</p>
-//           <button 
-//             onClick={() => refetch()}
-//             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-//           >
-//             Try Again
-//           </button>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="min-h-screen bg-gray-50 p-6">
-//       {/* Header */}
-//       <div className="mb-6">
-//         <h1 className="text-3xl font-bold text-gray-800">Reconciliation</h1>
-//         <p className="text-gray-600 mt-1">Manage pending approvals</p>
-//       </div>
-
-//       {/* Stats Cards */}
-//       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-//         <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-blue-500">
-//           <p className="text-gray-500 text-sm">Total Records</p>
-//           <p className="text-2xl font-bold text-gray-800">{approvalsList.length}</p>
-//         </div>
-//         <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-green-500">
-//           <p className="text-gray-500 text-sm">Filtered Records</p>
-//           <p className="text-2xl font-bold text-gray-800">{filteredData.length}</p>
-//         </div>
-//         <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-purple-500">
-//           <p className="text-gray-500 text-sm">Total Banks</p>
-//           <p className="text-2xl font-bold text-gray-800">{uniqueBanks.length}</p>
-//         </div>
-//         <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-orange-500">
-//           <p className="text-gray-500 text-sm">Payment Modes</p>
-//           <p className="text-2xl font-bold text-gray-800">{uniquePaymentModes.length}</p>
-//         </div>
-//       </div>
-
-//       {/* 🏦 BANK BALANCE CARD - Shows when bank is selected */}
-//       {selectedBank !== 'all' && (
-//         <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl shadow-lg p-6 mb-6 text-white">
-//           <div className="flex items-center justify-between">
-//             <div className="flex items-center gap-4">
-//               {/* Bank Icon */}
-//               <div className="bg-white/20 p-4 rounded-xl">
-//                 <svg 
-//                   xmlns="http://www.w3.org/2000/svg" 
-//                   className="h-10 w-10" 
-//                   fill="none" 
-//                   viewBox="0 0 24 24" 
-//                   stroke="currentColor"
-//                 >
-//                   <path 
-//                     strokeLinecap="round" 
-//                     strokeLinejoin="round" 
-//                     strokeWidth={2} 
-//                     d="M3 6l9-4 9 4v2H3V6zm0 4h18v10a2 2 0 01-2 2H5a2 2 0 01-2-2V10zm4 4v4m4-4v4m4-4v4" 
-//                   />
-//                 </svg>
-//               </div>
-              
-//               <div>
-//                 <p className="text-white/80 text-sm font-medium">Current Balance</p>
-//                 <p className="text-3xl font-bold">
-//                   {isLoadingBalance ? (
-//                     <span className="flex items-center gap-2">
-//                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-//                       Loading...
-//                     </span>
-//                   ) : isBalanceError ? (
-//                     <span className="text-red-200">Error fetching balance</span>
-//                   ) : (
-//                     formatBalance(bankBalanceData?.balance)
-//                   )}
-//                 </p>
-//               </div>
-//             </div>
-            
-//             <div className="text-right">
-//               <p className="text-white/80 text-sm">Selected Bank</p>
-//               <p className="text-xl font-semibold">{selectedBank}</p>
-//               <p className="text-white/60 text-xs mt-1">Balance from Sheet: H3</p>
-//             </div>
-//           </div>
-          
-//           {/* Balance Details Bar */}
-//           {bankBalanceData?.balance && !isLoadingBalance && (
-//             <div className="mt-4 pt-4 border-t border-white/20 flex items-center justify-between">
-//               <div className="flex items-center gap-2 text-white/80">
-//                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-//                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-//                 </svg>
-//                 <span className="text-sm">Last updated: Just now</span>
-//               </div>
-//               <button 
-//                 onClick={() => fetchBankBalance(selectedBank)}
-//                 className="flex items-center gap-1 px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-sm transition-colors"
-//               >
-//                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-//                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-//                 </svg>
-//                 Refresh Balance
-//               </button>
-//             </div>
-//           )}
-//         </div>
-//       )}
-
-//       {/* Filters Section - ONLY BANK FILTER */}
-//       <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-//         <div className="flex items-center justify-between mb-4">
-//           <h2 className="text-lg font-semibold text-gray-800">🏦 Select Bank</h2>
-//           {selectedBank !== 'all' && (
-//             <button
-//               onClick={clearFilters}
-//               className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
-//             >
-//               <span>✕</span> Clear Selection
-//             </button>
-//           )}
-//         </div>
-        
-//         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//           {/* Bank Filter - Main Filter */}
-//           <div>
-//             <label className="block text-sm font-medium text-gray-700 mb-2">
-//               Choose Bank to View Balance & Records
-//             </label>
-//             <select
-//               value={selectedBank}
-//               onChange={handleBankChange}
-//               className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-white text-lg"
-//             >
-//               <option value="all">🏦 All Banks</option>
-//               {uniqueBanks.map((bank, index) => (
-//                 <option key={index} value={bank}>
-//                   {bank}
-//                 </option>
-//               ))}
-//             </select>
-//           </div>
-
-//           {/* Refresh Button */}
-//           <div className="flex items-end">
-//             <button
-//               onClick={() => {
-//                 refetch();
-//                 if (selectedBank !== 'all') {
-//                   fetchBankBalance(selectedBank);
-//                 }
-//               }}
-//               className="w-full px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-lg"
-//             >
-//               <span>🔄</span> Refresh All Data
-//             </button>
-//           </div>
-//         </div>
-
-//         {/* Quick Bank Selection Buttons */}
-//         <div className="mt-4 pt-4 border-t border-gray-200">
-//           <p className="text-sm text-gray-600 mb-3">Quick Select:</p>
-//           <div className="flex flex-wrap gap-2">
-//             {uniqueBanks.slice(0, 6).map((bank, index) => (
-//               <button
-//                 key={index}
-//                 onClick={() => setSelectedBank(bank)}
-//                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-//                   selectedBank === bank 
-//                     ? 'bg-emerald-500 text-white shadow-md' 
-//                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-//                 }`}
-//               >
-//                 {bank}
-//               </button>
-//             ))}
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Table Section */}
-//       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-//         {/* Table Header with Selected Bank Info */}
-//         {selectedBank !== 'all' && (
-//           <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
-//             <div className="flex items-center justify-between">
-//               <div className="flex items-center gap-3">
-//                 <span className="text-2xl">🏦</span>
-//                 <div>
-//                   <p className="font-semibold text-gray-800">{selectedBank}</p>
-//                   <p className="text-sm text-gray-500">
-//                     {filteredData.length} transaction(s) found
-//                   </p>
-//                 </div>
-//               </div>
-//               <div className="text-right">
-//                 <p className="text-sm text-gray-500">Available Balance</p>
-//                 <p className="text-xl font-bold text-emerald-600">
-//                   {isLoadingBalance ? '...' : formatBalance(bankBalanceData?.balance)}
-//                 </p>
-//               </div>
-//             </div>
-//           </div>
-//         )}
-
-//         {filteredData.length === 0 ? (
-//           <div className="text-center py-12">
-//             <div className="text-6xl mb-4">📭</div>
-//             <h3 className="text-xl font-semibold text-gray-800 mb-2">No Records Found</h3>
-//             <p className="text-gray-600">
-//               {selectedBank !== 'all' 
-//                 ? `No pending records for ${selectedBank}` 
-//                 : 'No pending records available'}
-//             </p>
-//           </div>
-//         ) : (
-//           <div className="overflow-x-auto">
-//             <table className="w-full">
-//               <thead>
-//                 <tr className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-//                   <th className="px-4 py-4 text-left text-sm font-semibold">S.No</th>
-//                   <th className="px-4 py-4 text-left text-sm font-semibold">UID</th>
-//                   <th className="px-4 py-4 text-left text-sm font-semibold">Timestamp</th>
-//                   <th className="px-4 py-4 text-left text-sm font-semibold">Vendor Name</th>
-//                   <th className="px-4 py-4 text-left text-sm font-semibold">Amount</th>
-//                   <th className="px-4 py-4 text-left text-sm font-semibold">Bank</th>
-//                   <th className="px-4 py-4 text-left text-sm font-semibold">Payment Mode</th>
-//                   <th className="px-4 py-4 text-left text-sm font-semibold">Payment Date</th>
-//                   <th className="px-4 py-4 text-left text-sm font-semibold">Expense Head</th>
-//                   <th className="px-4 py-4 text-center text-sm font-semibold">Action</th>
-//                 </tr>
-//               </thead>
-//               <tbody className="divide-y divide-gray-200">
-//                 {filteredData.map((item, index) => (
-//                   <tr 
-//                     key={item.UID || index} 
-//                     className="hover:bg-blue-50 transition-colors"
-//                   >
-//                     <td className="px-4 py-4 text-sm text-gray-600">
-//                       {index + 1}
-//                     </td>
-//                     <td className="px-4 py-4">
-//                       <span className="text-sm font-medium text-blue-600">
-//                         {item.UID}
-//                       </span>
-//                     </td>
-//                     <td className="px-4 py-4 text-sm text-gray-600">
-//                       {item.Timestap}
-//                     </td>
-//                     <td className="px-4 py-4">
-//                       <span className="text-sm font-medium text-gray-800">
-//                         {item.Contractor_Vendor_Firm_Name}
-//                       </span>
-//                     </td>
-//                     <td className="px-4 py-4">
-//                       <span className="text-sm font-bold text-green-600">
-//                         ₹{item.PAID_AMOUNT}
-//                       </span>
-//                     </td>
-//                     <td className="px-4 py-4">
-//                       <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-//                         {item.BANK_DETAILS}
-//                       </span>
-//                     </td>
-//                     <td className="px-4 py-4">
-//                       <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-//                         {item.PAYMENT_MODE}
-//                       </span>
-//                     </td>
-//                     <td className="px-4 py-4 text-sm text-gray-600">
-//                       {item.PAYMENT_DATE}
-//                     </td>
-//                     <td className="px-4 py-4 text-sm text-gray-600">
-//                       {item.EXP_HEAD}
-//                     </td>
-//                     <td className="px-4 py-4">
-//                       <div className="flex items-center justify-center">
-//                         <button
-//                           onClick={() => handleOpenModal(item)}
-//                           className="p-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
-//                           title="Edit"
-//                         >
-//                           <svg 
-//                             xmlns="http://www.w3.org/2000/svg" 
-//                             className="h-5 w-5" 
-//                             fill="none" 
-//                             viewBox="0 0 24 24" 
-//                             stroke="currentColor"
-//                           >
-//                             <path 
-//                               strokeLinecap="round" 
-//                               strokeLinejoin="round" 
-//                               strokeWidth={2} 
-//                               d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" 
-//                             />
-//                           </svg>
-//                         </button>
-//                       </div>
-//                     </td>
-//                   </tr>
-//                 ))}
-//               </tbody>
-//             </table>
-//           </div>
-//         )}
-
-//         {/* Table Footer */}
-//         {filteredData.length > 0 && (
-//           <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
-//             <div className="flex items-center justify-between">
-//               <p className="text-sm text-gray-600">
-//                 Showing <span className="font-semibold">{filteredData.length}</span> of{' '}
-//                 <span className="font-semibold">{approvalsList.length}</span> records
-//               </p>
-//               {selectedBank !== 'all' && bankBalanceData?.balance && (
-//                 <p className="text-sm text-gray-600">
-//                   Bank Balance: <span className="font-bold text-emerald-600">{formatBalance(bankBalanceData?.balance)}</span>
-//                 </p>
-//               )}
-//             </div>
-//           </div>
-//         )}
-//       </div>
-
-//       {/* Edit Modal - Same as before */}
-//       {isModalOpen && (
-//         <div className="fixed inset-0 z-50 overflow-y-auto">
-//           <div 
-//             className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
-//             onClick={handleCloseModal}
-//           ></div>
-
-//           <div className="flex min-h-full items-center justify-center p-4">
-//             <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md transform transition-all">
-//               <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 rounded-t-2xl">
-//                 <div className="flex items-center justify-between">
-//                   <h3 className="text-xl font-semibold text-white">
-//                     Update Record
-//                   </h3>
-//                   <button
-//                     onClick={handleCloseModal}
-//                     className="text-white hover:bg-white/20 rounded-full p-1 transition-colors"
-//                   >
-//                     <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-//                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-//                     </svg>
-//                   </button>
-//                 </div>
-//               </div>
-
-//               <div className="px-6 py-4 bg-gray-50 border-b">
-//                 <div className="grid grid-cols-2 gap-3 text-sm">
-//                   <div>
-//                     <p className="text-gray-500">UID</p>
-//                     <p className="font-semibold text-blue-600">{selectedItem?.UID}</p>
-//                   </div>
-//                   <div>
-//                     <p className="text-gray-500">Amount</p>
-//                     <p className="font-semibold text-green-600">₹{selectedItem?.PAID_AMOUNT}</p>
-//                   </div>
-//                   <div className="col-span-2">
-//                     <p className="text-gray-500">Vendor</p>
-//                     <p className="font-semibold text-gray-800">{selectedItem?.Contractor_Vendor_Firm_Name}</p>
-//                   </div>
-//                 </div>
-//               </div>
-
-//               <form onSubmit={handleSubmit} className="px-6 py-6">
-//                 <div className="mb-5">
-//                   <label className="block text-sm font-medium text-gray-700 mb-2">
-//                     Status <span className="text-red-500">*</span>
-//                   </label>
-//                   <select
-//                     name="STATUS_2"
-//                     value={formData.STATUS_2}
-//                     onChange={handleInputChange}
-//                     required
-//                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
-//                   >
-//                     <option value="">Select Status</option>
-//                     <option value="Approved">✅ Done</option>
-//                     <option value="Rejected">❌ Cancel</option>
-//                   </select>
-//                 </div>
-
-//                 <div className="mb-5">
-//                   <label className="block text-sm font-medium text-gray-700 mb-2">
-//                     Bank Closing Balance
-//                   </label>
-//                   <input
-//                     type="text"
-//                     name="BANK_CLOSING_BALANCE_2"
-//                     value={formData.BANK_CLOSING_BALANCE_2}
-//                     onChange={handleInputChange}
-//                     placeholder="Enter closing balance"
-//                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-//                   />
-//                 </div>
-
-//                 <div className="mb-6">
-//                   <label className="block text-sm font-medium text-gray-700 mb-2">
-//                     Remark
-//                   </label>
-//                   <textarea
-//                     name="REMARK_2"
-//                     value={formData.REMARK_2}
-//                     onChange={handleInputChange}
-//                     placeholder="Enter remark (optional)"
-//                     rows={3}
-//                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
-//                   />
-//                 </div>
-
-//                 <div className="flex gap-3">
-//                   <button
-//                     type="button"
-//                     onClick={handleCloseModal}
-//                     className="flex-1 px-4 py-3 bg-gray-200 text-gray-800 font-medium rounded-lg hover:bg-gray-300 transition-colors"
-//                   >
-//                     Cancel
-//                   </button>
-//                   <button
-//                     type="submit"
-//                     disabled={isUpdating}
-//                     className="flex-1 px-4 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-//                   >
-//                     {isUpdating ? (
-//                       <>
-//                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-//                         Updating...
-//                       </>
-//                     ) : (
-//                       <>
-//                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-//                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-//                         </svg>
-//                         Submit
-//                       </>
-//                     )}
-//                   </button>
-//                 </div>
-//               </form>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default Reconciliation;
-
-
-
-
-// app/reconciliation/page.js
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -773,60 +145,136 @@ const Reconciliation = () => {
     }
   }, [bankBalanceData, isModalOpen, selectedItem]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
     
-    if (!formData.STATUS_2) {
-      Swal.fire({
-        icon: "warning",
-        title: "Status Required",
-        text: "Please select a valid Status!",
-        confirmButtonColor: "#6366f1",
-      });
-      return;
+  //   if (!formData.STATUS_2) {
+  //     Swal.fire({
+  //       icon: "warning",
+  //       title: "Status Required",
+  //       text: "Please select a valid Status!",
+  //       confirmButtonColor: "#6366f1",
+  //     });
+  //     return;
+  //   }
+
+  //   Swal.fire({
+  //     title: "Updating Record...",
+  //     allowOutsideClick: false,
+  //     didOpen: () => Swal.showLoading(),
+  //   });
+
+  //   try {
+  //     await updateApproval({
+  //       uid: selectedItem.UID,
+  //       STATUS_2: formData.STATUS_2,
+  //       BANK_CLOSING_BALANCE_2: formData.BANK_CLOSING_BALANCE_2.replace("₹", "").trim(),
+  //       REMARK_2: formData.REMARK_2
+  //     }).unwrap();
+
+  //     if (selectedBank !== 'all') {
+  //       await fetchBankBalance(selectedBank);
+  //     }
+
+  //     await Swal.fire({
+  //       icon: "success",
+  //       title: "Success!",
+  //       text: "Record updated successfully!",
+  //       confirmButtonColor: "#10b981",
+  //       timer: 2200,
+  //       showConfirmButton: false,
+  //     });
+
+  //     handleCloseModal();
+  //     refetch();
+  //   } catch (err) {
+  //     console.error('Failed to update:', err);
+  //     const errorMessage = err?.data?.message || err?.error || "Something went wrong! Please try again.";
+
+  //     Swal.fire({
+  //       icon: "error",
+  //       title: "Update Failed",
+  //       text: errorMessage,
+  //       confirmButtonColor: "#ef4444",
+  //     });
+  //   }
+  // };
+
+
+  // Frontend mein handleSubmit update karo
+// Pehle wala payload same rakho, bas field names match karo
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  if (!formData.STATUS_2) {
+    Swal.fire({
+      icon: "warning",
+      title: "Status Required",
+      text: "Please select a valid Status!",
+      confirmButtonColor: "#6366f1",
+    });
+    return;
+  }
+
+  Swal.fire({
+    title: "Saving Reconciliation...",
+    allowOutsideClick: false,
+    didOpen: () => Swal.showLoading(),
+  });
+
+  // ✅ Same payload jo pehle Express mein ja raha tha
+  const payload = {
+    particulars:                    String(selectedItem.Contractor_Vendor_Firm_Name || '').trim(),
+    paidAmount:                     String(selectedItem.PAID_AMOUNT || '').trim(),
+    paymentDetails:                 String(selectedItem.PAYMENT_DETAILS || '').trim(),
+    bankDetails:                    String(selectedItem.BANK_DETAILS || '').trim(),
+    bankClosingBalanceAfterPayment: formData.BANK_CLOSING_BALANCE_2.replace("₹", "").trim(),
+    status:                         formData.STATUS_2,
+    remark:                         formData.REMARK_2.trim(),
+  };
+
+  console.log('📤 Payload:', payload);
+
+  try {
+    await updateApproval(payload).unwrap();
+
+    // Bank balance refresh karo
+    if (selectedBank && selectedBank !== 'all') {
+      await fetchBankBalance(selectedBank);
     }
 
-    Swal.fire({
-      title: "Updating Record...",
-      allowOutsideClick: false,
-      didOpen: () => Swal.showLoading(),
+    await Swal.fire({
+      icon: "success",
+      title: "Success!",
+      text: "Reconciliation saved successfully!",
+      confirmButtonColor: "#10b981",
+      timer: 2200,
+      showConfirmButton: false,
     });
 
-    try {
-      await updateApproval({
-        uid: selectedItem.UID,
-        STATUS_2: formData.STATUS_2,
-        BANK_CLOSING_BALANCE_2: formData.BANK_CLOSING_BALANCE_2.replace("₹", "").trim(),
-        REMARK_2: formData.REMARK_2
-      }).unwrap();
+    handleCloseModal();
+    refetch(); // List refresh karo
+    
+  } catch (err) {
+    console.error('Failed to save:', err);
+    const errorMessage = 
+      err?.data?.message || 
+      err?.error || 
+      "Something went wrong! Please try again.";
 
-      if (selectedBank !== 'all') {
-        await fetchBankBalance(selectedBank);
-      }
+    Swal.fire({
+      icon: "error",
+      title: "Save Failed",
+      text: errorMessage,
+      confirmButtonColor: "#ef4444",
+    });
+  }
+};
+  
 
-      await Swal.fire({
-        icon: "success",
-        title: "Success!",
-        text: "Record updated successfully!",
-        confirmButtonColor: "#10b981",
-        timer: 2200,
-        showConfirmButton: false,
-      });
-
-      handleCloseModal();
-      refetch();
-    } catch (err) {
-      console.error('Failed to update:', err);
-      const errorMessage = err?.data?.message || err?.error || "Something went wrong! Please try again.";
-
-      Swal.fire({
-        icon: "error",
-        title: "Update Failed",
-        text: errorMessage,
-        confirmButtonColor: "#ef4444",
-      });
-    }
-  };
 
   const formatBalance = (balance) => {
     if (!balance) return '₹0';

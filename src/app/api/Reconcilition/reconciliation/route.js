@@ -1,22 +1,174 @@
+// import { NextResponse } from 'next/server';
+// import { sheets, spreadsheetId } from '../../config/googleSheet';
+
+// // GET - Pending Approvals Fetch
+// export async function GET(request) {
+//   try {
+//     if (!spreadsheetId) {
+//       return NextResponse.json(
+//         {
+//           success: false,
+//           error: "spreadsheetId is not configured",
+//         },
+//         { status: 500 }
+//       );
+//     }
+
+//     const response = await sheets.spreadsheets.values.get({
+//       spreadsheetId,
+//       range: "Out_FMS!A7:M",
+//     });
+
+//     let rows = response.data.values || [];
+
+//     if (rows.length === 0) {
+//       return NextResponse.json({
+//         success: true,
+//         message: "No data found",
+//         data: [],
+//       });
+//     }
+
+//     // Filter pending approval
+//     const filteredData = rows
+//       .filter((row) => row[11] && !row[12])
+//       .map((row) => ({
+//         UID: (row[0] || "").toString().trim(),
+//         Timestap: (row[1] || "").toString().trim(),
+//         Contractor_Vendor_Firm_Name: (row[2] || "").toString().trim(),
+//         PAID_AMOUNT: (row[3] || "").toString().trim(),
+//         BANK_DETAILS: (row[4] || "").toString().trim(),
+//         PAYMENT_MODE: (row[5] || "").toString().trim(),
+//         PAYMENT_DETAILS: (row[6] || "").toString().trim(),
+//         PAYMENT_DATE: (row[7] || "").toString().trim(),
+//         EXP_HEAD: (row[8] || "").toString().trim(),
+//         PLANNED_2: (row[11] || "").toString().trim(),
+//         ACTUAL_2: (row[12] || "").toString().trim(),
+//       }));
+
+//     return NextResponse.json({
+//       success: true,
+//       totalRecords: filteredData.length,
+//       data: filteredData,
+//     });
+//   } catch (error) {
+//     console.error("GET Error:", error.message);
+//     return NextResponse.json(
+//       {
+//         success: false,
+//         error: "Failed to fetch",
+//         details: error.message,
+//       },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+// // POST - Update Approval
+// export async function POST(request) {
+//   try {
+//     const body = await request.json();
+//     const { uid, STATUS_2, BANK_CLOSING_BALANCE_2, REMARK_2 } = body;
+
+//     console.log("Received update body:", body);
+
+//     if (!uid) {
+//       return NextResponse.json(
+//         {
+//           success: false,
+//           message: "UID is required",
+//         },
+//         { status: 400 }
+//       );
+//     }
+
+//     const trimmedUid = uid.toString().trim();
+
+//     // Find row by UID
+//     const findResponse = await sheets.spreadsheets.values.get({
+//       spreadsheetId,
+//       range: "Out_FMS!A7:A",
+//     });
+
+//     const values = findResponse.data.values || [];
+
+//     const rowIndex = values.findIndex((row) => {
+//       if (row.length === 0) return false;
+//       const sheetValue = row[0] ? row[0].toString().trim() : "";
+//       return sheetValue === trimmedUid;
+//     });
+
+//     if (rowIndex === -1) {
+//       return NextResponse.json(
+//         {
+//           success: false,
+//           message: "Row not found with this UID",
+//           searchedFor: uid,
+//         },
+//         { status: 404 }
+//       );
+//     }
+
+//     const sheetRowNumber = 7 + rowIndex;
+
+//     // Batch update
+//     await sheets.spreadsheets.values.batchUpdate({
+//       spreadsheetId,
+//       resource: {
+//         valueInputOption: "USER_ENTERED",
+//         data: [
+//           {
+//             range: `Out_FMS!N${sheetRowNumber}`,
+//             values: [[STATUS_2 || ""]],
+//           },
+//           {
+//             range: `Out_FMS!P${sheetRowNumber}`,
+//             values: [[BANK_CLOSING_BALANCE_2 || ""]],
+//           },
+//           {
+//             range: `Out_FMS!Q${sheetRowNumber}`,
+//             values: [[REMARK_2 || ""]],
+//           },
+//         ],
+//       },
+//     });
+
+//     return NextResponse.json({
+//       success: true,
+//       message: "Data updated successfully",
+//     });
+//   } catch (error) {
+//     console.error("POST Error:", error);
+//     return NextResponse.json(
+//       {
+//         success: false,
+//         message: "Server error",
+//         error: error.message,
+//       },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+
+
+
 import { NextResponse } from 'next/server';
 import { sheets, spreadsheetId } from '../../config/googleSheet';
 
-// GET - Pending Approvals Fetch
+// ─── GET - Pending Approvals ──────────────────────────────────────────────────
 export async function GET(request) {
   try {
     if (!spreadsheetId) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "spreadsheetId is not configured",
-        },
+        { success: false, error: 'spreadsheetId is not configured' },
         { status: 500 }
       );
     }
 
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: "Out_FMS!A7:M",
+      range: 'Out_FMS!A7:M',
     });
 
     let rows = response.data.values || [];
@@ -24,26 +176,25 @@ export async function GET(request) {
     if (rows.length === 0) {
       return NextResponse.json({
         success: true,
-        message: "No data found",
+        message: 'No data found',
         data: [],
       });
     }
 
-    // Filter pending approval
     const filteredData = rows
-      .filter((row) => row[11] && !row[12])
-      .map((row) => ({
-        UID: (row[0] || "").toString().trim(),
-        Timestap: (row[1] || "").toString().trim(),
-        Contractor_Vendor_Firm_Name: (row[2] || "").toString().trim(),
-        PAID_AMOUNT: (row[3] || "").toString().trim(),
-        BANK_DETAILS: (row[4] || "").toString().trim(),
-        PAYMENT_MODE: (row[5] || "").toString().trim(),
-        PAYMENT_DETAILS: (row[6] || "").toString().trim(),
-        PAYMENT_DATE: (row[7] || "").toString().trim(),
-        EXP_HEAD: (row[8] || "").toString().trim(),
-        PLANNED_2: (row[11] || "").toString().trim(),
-        ACTUAL_2: (row[12] || "").toString().trim(),
+      .filter(row => row[11] && !row[12])
+      .map(row => ({
+        UID:                          (row[0]  || '').toString().trim(),
+        Timestap:                     (row[1]  || '').toString().trim(),
+        Contractor_Vendor_Firm_Name:  (row[2]  || '').toString().trim(),
+        PAID_AMOUNT:                  (row[3]  || '').toString().trim(),
+        BANK_DETAILS:                 (row[4]  || '').toString().trim(),
+        PAYMENT_MODE:                 (row[5]  || '').toString().trim(),
+        PAYMENT_DETAILS:              (row[6]  || '').toString().trim(),
+        PAYMENT_DATE:                 (row[7]  || '').toString().trim(),
+        EXP_HEAD:                     (row[8]  || '').toString().trim(),
+        PLANNED_2:                    (row[11] || '').toString().trim(),
+        ACTUAL_2:                     (row[12] || '').toString().trim(),
       }));
 
     return NextResponse.json({
@@ -51,98 +202,110 @@ export async function GET(request) {
       totalRecords: filteredData.length,
       data: filteredData,
     });
+
   } catch (error) {
-    console.error("GET Error:", error.message);
+    console.error('GET Error:', error.message);
     return NextResponse.json(
-      {
-        success: false,
-        error: "Failed to fetch",
-        details: error.message,
-      },
+      { success: false, error: 'Failed to fetch', details: error.message },
       { status: 500 }
     );
   }
 }
 
-// POST - Update Approval
+// ─── POST - Update Reconciliation ────────────────────────────────────────────
 export async function POST(request) {
+  console.log('═══════════════════════════════════');
+
   try {
     const body = await request.json();
-    const { uid, STATUS_2, BANK_CLOSING_BALANCE_2, REMARK_2 } = body;
+    console.log('📥 FULL body:', JSON.stringify(body, null, 2));
 
-    console.log("Received update body:", body);
+    const {
+      particulars,                      // contractorName → B
+      paidAmount,                       // paid amount   → G
+      paymentDetails,                   // payment ref   → D
+      bankDetails,                      // bank name     → C
+      bankClosingBalanceAfterPayment,   // closing bal   → F
+      status,                           // status        → E
+      remark,                           // remark        → H
+    } = body;
 
-    if (!uid) {
+    // ─── Validation ─────────────────────────────────
+    if (!paymentDetails?.toString().trim() || !bankDetails?.toString().trim()) {
       return NextResponse.json(
         {
           success: false,
-          message: "UID is required",
+          message: 'paymentDetails and bankDetails are required',
         },
         { status: 400 }
       );
     }
 
-    const trimmedUid = uid.toString().trim();
+    // ─── Timestamp ──────────────────────────────────
+    const now       = new Date();
+    const dd        = String(now.getDate()).padStart(2, '0');
+    const mm        = String(now.getMonth() + 1).padStart(2, '0');
+    const yyyy      = now.getFullYear();
+    const hh        = String(now.getHours()).padStart(2, '0');
+    const min       = String(now.getMinutes()).padStart(2, '0');
+    const ss        = String(now.getSeconds()).padStart(2, '0');
+    const timeStamp = `${dd}/${mm}/${yyyy} ${hh}:${min}:${ss}`;
 
-    // Find row by UID
-    const findResponse = await sheets.spreadsheets.values.get({
+    // ─── Find Next Empty Row ─────────────────────────
+    const sheetResponse = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: "Out_FMS!A7:A",
+      range: 'Actual Out!A5:H',
     });
 
-    const values = findResponse.data.values || [];
+    const existingRows  = sheetResponse.data.values || [];
+    const nextRowNumber = 5 + existingRows.length;
 
-    const rowIndex = values.findIndex((row) => {
-      if (row.length === 0) return false;
-      const sheetValue = row[0] ? row[0].toString().trim() : "";
-      return sheetValue === trimmedUid;
+    // ─── Build Row Data (A to H) ─────────────────────
+    const rowData = [
+      timeStamp,                                            // A → Timestamp
+      String(particulars || '').trim(),                     // B → Particulars
+      String(bankDetails || '').trim(),                     // C → Bank Details
+      String(paymentDetails || '').trim(),                  // D → Payment Details
+      String(status || '').trim(),                          // E → Status
+      String(bankClosingBalanceAfterPayment || '').trim(),  // F → Closing Balance
+      String(paidAmount || '').trim(),                      // G → Paid Amount
+      String(remark || '').trim(),                          // H → Remark
+    ];
+
+    console.log('📝 Writing row:', rowData);
+    console.log('📍 At row number:', nextRowNumber);
+
+    // ─── Write to Sheet ──────────────────────────────
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: `Actual Out!A${nextRowNumber}:H${nextRowNumber}`,
+      valueInputOption: 'USER_ENTERED',
+      resource: { values: [rowData] },
     });
 
-    if (rowIndex === -1) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Row not found with this UID",
-          searchedFor: uid,
-        },
-        { status: 404 }
-      );
-    }
-
-    const sheetRowNumber = 7 + rowIndex;
-
-    // Batch update
-    await sheets.spreadsheets.values.batchUpdate({
-      spreadsheetId,
-      resource: {
-        valueInputOption: "USER_ENTERED",
-        data: [
-          {
-            range: `Out_FMS!N${sheetRowNumber}`,
-            values: [[STATUS_2 || ""]],
-          },
-          {
-            range: `Out_FMS!P${sheetRowNumber}`,
-            values: [[BANK_CLOSING_BALANCE_2 || ""]],
-          },
-          {
-            range: `Out_FMS!Q${sheetRowNumber}`,
-            values: [[REMARK_2 || ""]],
-          },
-        ],
+    // ─── Success Response ────────────────────────────
+    return NextResponse.json({
+      success: true,
+      message: `Saved successfully at row ${nextRowNumber}`,
+      row: nextRowNumber,
+      savedData: {
+        A_TimeStamp:      timeStamp,
+        B_Particulars:    particulars,
+        C_BankDetails:    bankDetails,
+        D_PaymentDetails: paymentDetails,
+        E_Status:         status,
+        F_ClosingBalance: bankClosingBalanceAfterPayment,
+        G_PaidAmount:     paidAmount,
+        H_Remark:         remark,
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      message: "Data updated successfully",
-    });
   } catch (error) {
-    console.error("POST Error:", error);
+    console.error('❌ POST Error:', error);
     return NextResponse.json(
       {
         success: false,
-        message: "Server error",
+        message: 'Failed to save data',
         error: error.message,
       },
       { status: 500 }
