@@ -17,6 +17,7 @@ export const approve1Api = createApi({
       providesTags: ["PendingApprovals"],
     }),
 
+    
     // POST - approve / update one record
     updateApproval: builder.mutation({
       query: (approvalData) => ({

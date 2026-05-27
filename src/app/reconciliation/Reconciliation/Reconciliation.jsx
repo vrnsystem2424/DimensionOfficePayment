@@ -147,64 +147,8 @@ const Reconciliation = () => {
 
 
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-    
-  //   if (!formData.STATUS_2) {
-  //     Swal.fire({
-  //       icon: "warning",
-  //       title: "Status Required",
-  //       text: "Please select a valid Status!",
-  //       confirmButtonColor: "#6366f1",
-  //     });
-  //     return;
-  //   }
-
-  //   Swal.fire({
-  //     title: "Updating Record...",
-  //     allowOutsideClick: false,
-  //     didOpen: () => Swal.showLoading(),
-  //   });
-
-  //   try {
-  //     await updateApproval({
-  //       uid: selectedItem.UID,
-  //       STATUS_2: formData.STATUS_2,
-  //       BANK_CLOSING_BALANCE_2: formData.BANK_CLOSING_BALANCE_2.replace("₹", "").trim(),
-  //       REMARK_2: formData.REMARK_2
-  //     }).unwrap();
-
-  //     if (selectedBank !== 'all') {
-  //       await fetchBankBalance(selectedBank);
-  //     }
-
-  //     await Swal.fire({
-  //       icon: "success",
-  //       title: "Success!",
-  //       text: "Record updated successfully!",
-  //       confirmButtonColor: "#10b981",
-  //       timer: 2200,
-  //       showConfirmButton: false,
-  //     });
-
-  //     handleCloseModal();
-  //     refetch();
-  //   } catch (err) {
-  //     console.error('Failed to update:', err);
-  //     const errorMessage = err?.data?.message || err?.error || "Something went wrong! Please try again.";
-
-  //     Swal.fire({
-  //       icon: "error",
-  //       title: "Update Failed",
-  //       text: errorMessage,
-  //       confirmButtonColor: "#ef4444",
-  //     });
-  //   }
-  // };
 
 
-  // Frontend mein handleSubmit update karo
-// Pehle wala payload same rakho, bas field names match karo
 
 const handleSubmit = async (e) => {
   e.preventDefault();
@@ -473,7 +417,7 @@ const handleSubmit = async (e) => {
                   <table className="w-full min-w-max">
                     <thead className={`bg-opacity-50 ${isDarkMode ? "bg-black/50" : "bg-gray-200/80"}`}>
                       <tr>
-                        {["S.No", "Timestamp", "UID", "Vendor Name", "Amount", "Bank", "Mode", "Payment Date", "Exp Head", "Action"].map((h, i) => (
+                        {["S.No", "Timestamp", "UID", "Vendor Name", "Amount", "Bank", "Mode", "Payment Detail","Payment Date", "Exp Head", "Action"].map((h, i) => (
                           <th key={i} className={`px-6 py-4 text-left text-sm lg:text-base font-semibold uppercase tracking-wider ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
                             {h}
                           </th>
@@ -498,6 +442,7 @@ const handleSubmit = async (e) => {
                               {item.PAYMENT_MODE}
                             </span>
                           </td>
+                          <td className={`px-6 py-5 font-bold ${isDarkMode ? "text-emerald-400" : "text-emerald-700"}`}>₹{item.PAYMENT_DETAILS}</td>
                           <td className={`px-6 py-5 text-sm ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>{item.PAYMENT_DATE}</td>
                           <td className={`px-6 py-5 text-sm ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>{item.EXP_HEAD}</td>
                           <td className="px-6 py-5 text-center">
